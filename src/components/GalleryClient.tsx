@@ -1,148 +1,497 @@
 'use client';
-import React, { useState, useRef, useCallback } from 'react';
+
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Lightbox from './Lightbox';
 
-type Section = { key: string; label: string; images: string[] };
+type Section = {
+  key: string;
+  label: string;
+  images: string[];
+};
 
-export default function GalleryClient({
-  sections,
-  hero,
-}: {
+type GalleryClientProps = {
   sections: Section[];
   hero: string | null;
+};
+
+type GalleryImageProps = {
+  src: string;
+  alt: string;
+  index: number;
+  section: string;
+  className: string;
+  onClick: () => void;
+};
+
+const GalleryImage = memo(function GalleryImage({
+  src,
+  alt,
+  index,
+  section,
+  className,
+  onClick,
+}: GalleryImageProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Open ${section} image ${index + 1}`}
+      className={[
+        className,
+        'group relative overflow-hidden rounded-[2px]',
+        'bg-slate-100',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900',
+        'focus-visible:ring-offset-2',
+      ].join(' ')}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        loading={index < 2 ? 'eager' : 'lazy'}
+        quality={82}
+        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
+      />
+
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/10"
+      />
+
+      <span
+        aria-hidden="true"
+        className="
+          absolute bottom-4 right-4
+          flex h-9 w-9 items-center justify-center
+          rounded-full bg-white/90 text-slate-900
+          opacity-0 translate-y-2
+          shadow-sm backdrop-blur
+          transition-all duration-300
+          group-hover:translate-y-0 group-hover:opacity-100
+        "
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M15 3h6v6" />
+          <path d="M10 14 21 3" />
+          <path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6" />
+        </svg>
+      </span>
+    </button>
+  );
+});
+
+function SectionGallery({
+  section,
+  sectionIndex,
+  onOpen,
+}: {
+  section: Section;
+  sectionIndex: number;
+  onOpen: (images: string[], index: number) => void;
 }) {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
-  const navRef = useRef<HTMLDivElement | null>(null);
-
-  const openLightbox = useCallback((images: string[], idx: number) => {
-    setLightboxImages(images);
-    setLightboxIndex(idx);
-  }, []);
-
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const next = useCallback(
-    () => setLightboxIndex((i) => (i === null ? null : (i + 1) % lightboxImages.length)),
-    [lightboxImages.length]
-  );
-  const prev = useCallback(
-    () =>
-      setLightboxIndex((i) =>
-        i === null ? null : (i - 1 + lightboxImages.length) % lightboxImages.length
-      ),
-    [lightboxImages.length]
-  );
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const title =
+    section.label === 'Bedrooms'
+      ? 'Private Sanctuaries'
+      : section.label === 'Main Level'
+        ? 'The Heart of the Villa'
+        : section.label === 'Entertainment Deck'
+          ? 'Made for Long Evenings'
+          : section.label === 'Main Level Views'
+            ? 'Caribbean Horizons'
+            : section.label === 'Upper Level Views'
+              ? 'Views from Above'
+              : section.label;
 
   return (
-    <main className="">
-      <section className="relative h-[60vh] md:h-[72vh] w-full overflow-hidden">
-        {hero ? (
-          <div className="absolute inset-0">
-            <Image src={hero} alt="Hero" fill className="object-cover" sizes="100vw" priority />
+    <section
+      id={`section-${section.key}`}
+      className="scroll-mt-24"
+      aria-labelledby={`heading-${section.key}`}
+    >
+      <div className="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <span className="h-px w-8 bg-slate-400" />
+
+            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-500">
+              {String(sectionIndex + 1).padStart(2, '0')} /{' '}
+              {String(section.images.length).padStart(2, '0')} images
+            </p>
           </div>
-        ) : (
-          <div className="absolute inset-0 bg-slate-100" />
-        )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
-          <p className="text-sm tracking-widest">THE VILLA IN IMAGES</p>
-          <h1 className="mt-3 text-4xl font-display">B on the Sea</h1>
-          <p className="mt-3 max-w-2xl">
-            Explore the villa, its private spaces, expansive decks, and breathtaking Caribbean
-            surroundings.
+
+          <h2
+            id={`heading-${section.key}`}
+            className="font-display text-3xl leading-tight text-slate-950 md:text-4xl"
+          >
+            {title}
+          </h2>
+
+          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+            {section.label === 'Bedrooms'
+              ? 'Quiet spaces designed for slow mornings and restful Caribbean nights.'
+              : section.label === 'Entertainment Deck'
+                ? 'Open-air spaces made for sunset drinks, conversation, and unforgettable evenings.'
+                : 'A glimpse into life at B on the Sea.'}
           </p>
-          <div className="absolute bottom-8 text-white/90 text-sm">EXPLORE THE GALLERY ↓</div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onOpen(section.images, 0)}
+          className="
+            hidden items-center gap-2 self-start text-xs
+            font-medium uppercase tracking-[0.18em]
+            text-slate-500 transition-colors
+            hover:text-slate-950 md:flex
+          "
+        >
+          View collection
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-12 md:gap-3">
+        {section.images.map((src, index) => {
+          const pattern = index % 8;
+
+          let className = 'col-span-2 aspect-[4/3] md:col-span-4 md:aspect-auto md:h-[280px]';
+
+          if (pattern === 0) {
+            className = 'col-span-2 aspect-[16/10] md:col-span-8 md:row-span-2 md:h-[575px]';
+          } else if (pattern === 1) {
+            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
+          } else if (pattern === 2) {
+            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
+          } else if (pattern === 3) {
+            className = 'col-span-2 aspect-[16/10] md:col-span-4 md:h-[575px]';
+          } else if (pattern === 4 || pattern === 5) {
+            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
+          } else if (pattern === 6) {
+            className = 'col-span-2 aspect-[16/9] md:col-span-8 md:h-[400px]';
+          } else if (pattern === 7) {
+            className = 'col-span-2 aspect-[4/3] md:col-span-4 md:h-[400px]';
+          }
+
+          return (
+            <GalleryImage
+              key={`${section.key}-${src}-${index}`}
+              src={src}
+              index={index}
+              section={section.label}
+              alt={`${section.label} — image ${index + 1}`}
+              className={className}
+              onClick={() => onOpen(section.images, index)}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export default function GalleryClient({ sections, hero }: GalleryClientProps) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [activeSection, setActiveSection] = useState('all');
+
+  const totalImages = useMemo(
+    () => sections.reduce((total, section) => total + section.images.length, 0),
+    [sections]
+  );
+
+  const openLightbox = useCallback((images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+  }, []);
+
+  const next = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || lightboxImages.length === 0) {
+        return null;
+      }
+
+      return (current + 1) % lightboxImages.length;
+    });
+  }, [lightboxImages.length]);
+
+  const prev = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || lightboxImages.length === 0) {
+        return null;
+      }
+
+      return (current - 1 + lightboxImages.length) % lightboxImages.length;
+    });
+  }, [lightboxImages.length]);
+
+  useEffect(() => {
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id.replace('section-', ''));
+        }
+      },
+      {
+        rootMargin: '-20% 0px -65% 0px',
+        threshold: 0,
+      }
+    );
+
+    sections.forEach((section) => {
+      const element = document.getElementById(`section-${section.key}`);
+
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [sections]);
+
+  const scrollToSection = useCallback((id: string) => {
+    if (id === 'all') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+      return;
+    }
+
+    const element = document.getElementById(`section-${id}`);
+
+    element?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, []);
+
+  if (sections.length === 0) {
+    return (
+      <main className="min-h-[70vh] bg-white">
+        <section className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center px-6 text-center">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">B on the Sea</p>
+
+            <h1 className="mt-5 font-display text-4xl text-slate-950 md:text-5xl">
+              The gallery is coming soon
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-slate-500">
+              We are preparing a collection of images from the villa, its private spaces, decks, and
+              Caribbean surroundings.
+            </p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="bg-[#fafaf9] text-slate-950">
+      {/* HERO */}
+      <section className="relative h-[72vh] min-h-[560px] w-full overflow-hidden bg-slate-900">
+        {hero && (
+          <Image
+            src={hero}
+            alt="B on the Sea villa"
+            fill
+            priority
+            quality={88}
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
+
+        <div className="absolute inset-0 bg-black/25" />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+
+        <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-6 pb-12 md:pb-16">
+          <div className="max-w-3xl text-white">
+            <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.35em] text-white/70">
+              B on the Sea · Villa Gallery
+            </p>
+
+            <h1 className="font-display text-5xl leading-[0.95] tracking-tight md:text-7xl lg:text-8xl">
+              A place worth
+              <br />
+              seeing.
+            </h1>
+
+            <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center">
+              <p className="max-w-lg text-sm leading-6 text-white/75 md:text-base">
+                Explore {totalImages} images of the villa, its private spaces, expansive decks, and
+                breathtaking Caribbean surroundings.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => scrollToSection('all')}
+                className="
+                  inline-flex shrink-0 items-center justify-center
+                  gap-3 border border-white/40 bg-white/10
+                  px-5 py-3 text-xs font-medium uppercase
+                  tracking-[0.18em] text-white backdrop-blur-md
+                  transition-all duration-300
+                  hover:border-white hover:bg-white hover:text-slate-950
+                "
+              >
+                Explore
+                <span aria-hidden="true">↓</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-6 right-6 hidden text-[10px] uppercase tracking-[0.25em] text-white/50 md:block">
+          Scroll to explore
         </div>
       </section>
 
-      <nav ref={navRef} className="sticky top-0 bg-white/70 backdrop-blur-sm z-20 py-3">
-        <div className="max-w-7xl mx-auto px-6 overflow-x-auto">
-          <div className="flex gap-4 items-center">
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="px-3 py-1 text-sm font-medium"
-            >
-              All
-            </button>
-            {sections.map((s) => (
+      {/* STICKY NAV */}
+      <nav
+        aria-label="Gallery sections"
+        className="
+          sticky top-0 z-30 border-b border-slate-200/70
+          bg-[#fafaf9]/90 backdrop-blur-xl
+        "
+      >
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="flex overflow-x-auto scrollbar-none">
+            <div className="flex min-w-max items-center gap-1 py-3">
               <button
-                key={s.key}
-                onClick={() => scrollTo(`section-${s.key}`)}
-                className="px-3 py-1 text-sm font-medium whitespace-nowrap"
+                type="button"
+                onClick={() => scrollToSection('all')}
+                className={`
+                  relative px-4 py-2 text-[11px] font-medium
+                  uppercase tracking-[0.16em] transition-colors
+                  ${
+                    activeSection === 'all'
+                      ? 'text-slate-950'
+                      : 'text-slate-400 hover:text-slate-900'
+                  }
+                `}
               >
-                {s.label}
+                All
+                {activeSection === 'all' && (
+                  <span className="absolute inset-x-4 -bottom-3 h-px bg-slate-950" />
+                )}
               </button>
-            ))}
-          </div>
-        </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 space-y-20">
-        {sections.map((section, si) => (
-          <section id={`section-${section.key}`} key={section.key}>
-            <div className="flex items-baseline justify-between mb-6">
-              <div>
-                <p className="text-sm text-slate-500">
-                  {String(si + 1).padStart(2, '0')} — {section.label.toUpperCase()}
-                </p>
-                <h2 className="text-2xl font-display mt-2">
-                  {section.label === 'Bedrooms'
-                    ? 'Private Sanctuaries'
-                    : undefined || section.label}
-                </h2>
-              </div>
-              <div className="text-sm text-slate-500">{section.images.length} images</div>
-            </div>
-
-            <div className="grid grid-cols-12 gap-4 auto-rows-[180px] md:auto-rows-[220px]">
-              {section.images.map((src, i) => {
-                const pattern = i % 6;
-                let className = 'col-span-12 md:col-span-6 row-span-1';
-                if (pattern === 0) className = 'col-span-12 md:col-span-8 row-span-2';
-                if (pattern === 1 || pattern === 2)
-                  className = 'col-span-6 md:col-span-3 row-span-1';
-                if (pattern === 3) className = 'col-span-12 md:col-span-6 row-span-2';
+              {sections.map((section) => {
+                const active = activeSection === section.key;
 
                 return (
                   <button
-                    key={src}
-                    onClick={() => openLightbox(section.images, i)}
-                    className={`${className} relative overflow-hidden group rounded-lg focus:outline-none`}
+                    key={section.key}
+                    type="button"
+                    onClick={() => scrollToSection(section.key)}
+                    className={`
+                      relative px-4 py-2 text-[11px] font-medium
+                      uppercase tracking-[0.16em] transition-colors
+                      ${active ? 'text-slate-950' : 'text-slate-400 hover:text-slate-900'}
+                    `}
                   >
-                    <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-                      <Image
-                        src={src}
-                        alt={`${section.label} ${i + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-10 transition" />
+                    {section.label}
+
+                    {active && <span className="absolute inset-x-4 -bottom-3 h-px bg-slate-950" />}
                   </button>
                 );
               })}
             </div>
-          </section>
-        ))}
+          </div>
+        </div>
+      </nav>
 
-        <section className="text-center">
-          <h3 className="text-2xl font-display mb-4">See It in Person</h3>
-          <p className="text-slate-600 mb-6">
-            Experience the privacy, views, and effortless Caribbean living of B on the Sea.
+      {/* GALLERY */}
+      <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24">
+        <div className="mb-20 max-w-2xl">
+          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-slate-400">
+            Inside B on the Sea
           </p>
-          <div className="flex items-center justify-center gap-4">
-            <a href="/book-now" className="px-6 py-3 bg-slate-900 text-white rounded-md">
-              Book Your Stay
-            </a>
-            <a href="/" className="px-6 py-3 border border-slate-200 rounded-md">
-              Explore the Villa
-            </a>
+
+          <h2 className="mt-4 font-display text-4xl leading-tight tracking-tight md:text-5xl">
+            Spaces designed for
+            <br />
+            effortless island living.
+          </h2>
+        </div>
+
+        <div className="space-y-24 md:space-y-32">
+          {sections.map((section, index) => (
+            <SectionGallery
+              key={section.key}
+              section={section}
+              sectionIndex={index}
+              onOpen={openLightbox}
+            />
+          ))}
+        </div>
+
+        {/* CTA */}
+        <section className="relative mt-28 overflow-hidden bg-slate-950 px-6 py-20 text-center text-white md:mt-40 md:px-10 md:py-28">
+          <div className="relative z-10 mx-auto max-w-2xl">
+            <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/45">
+              Experience B on the Sea
+            </p>
+
+            <h2 className="mt-5 font-display text-4xl leading-tight md:text-6xl">
+              Some places are better
+              <br />
+              experienced in person.
+            </h2>
+
+            <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-white/55 md:text-base">
+              Discover the privacy, views, and effortless Caribbean living that make B on the Sea
+              unforgettable.
+            </p>
+
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+              <a
+                href="/book-now"
+                className="
+                  inline-flex items-center justify-center
+                  bg-white px-7 py-3.5 text-xs font-medium
+                  uppercase tracking-[0.18em] text-slate-950
+                  transition-transform duration-300
+                  hover:-translate-y-0.5
+                "
+              >
+                Book Your Stay
+              </a>
+
+              <a
+                href="/"
+                className="
+                  inline-flex items-center justify-center
+                  border border-white/20 px-7 py-3.5
+                  text-xs font-medium uppercase tracking-[0.18em]
+                  text-white transition-colors duration-300
+                  hover:border-white/50
+                "
+              >
+                Explore the Villa
+              </a>
+            </div>
           </div>
         </section>
       </div>

@@ -1,50 +1,97 @@
 import fs from 'fs';
 import path from 'path';
-import Image from 'next/image';
+
 import AccommodationsGalleryClient from '../../components/AccommodationsGalleryClient';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 export const metadata = {
-  title: 'Accommodations — Villa Bedrooms',
+  title: 'Villa Bedrooms | B on the Sea',
+  description:
+    'Explore the private bedrooms at B on the Sea, designed for comfort, privacy, and relaxing Caribbean views.',
 };
 
 export default function AccommodationsPage() {
   const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'aboutvillab', 'bedrooms');
+
   let files: string[] = [];
+
   try {
-    files = fs.readdirSync(uploadsDir).filter((f) => /\.(jpe?g|png|webp|gif)$/i.test(f));
-  } catch (e) {
-    // If folder unreadable, leave files empty to avoid crashing
+    files = fs
+      .readdirSync(uploadsDir)
+      .filter((file) => /\.(jpe?g|png|webp|gif)$/i.test(file))
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        })
+      );
+  } catch (error) {
+    console.error('Unable to read bedroom images:', error);
     files = [];
   }
 
-  const images = files.map((f) => `/uploads/aboutvillab/bedrooms/${f}`);
+  const images = files.map((file) => `/uploads/aboutvillab/bedrooms/${encodeURIComponent(file)}`);
 
   return (
     <>
       <Header />
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <header className="max-w-3xl mx-auto text-center mb-10">
-          <p className="text-sm tracking-widest text-slate-500">ACCOMMODATIONS</p>
-          <h1 className="mt-3 text-4xl font-display">Villa Bedrooms</h1>
-          <p className="mt-3 text-slate-600">
-            Private spaces designed for comfort, privacy, and views of the Caribbean.
+
+      <main className="mx-auto max-w-7xl px-5 py-12 sm:px-6 sm:py-16 lg:py-20">
+        {/* Page Header */}
+        <header className="mx-auto mb-10 max-w-3xl text-center sm:mb-14">
+          <p className="text-xs font-medium tracking-[0.3em] text-slate-500 sm:text-sm">
+            ACCOMMODATIONS
+          </p>
+
+          <h1 className="mt-3 font-display text-4xl leading-tight text-slate-900 sm:text-5xl">
+            Villa Bedrooms
+          </h1>
+
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            Wake to Caribbean views and retreat to beautifully appointed private spaces designed for
+            comfort, privacy, and restful stays.
           </p>
         </header>
 
+        {/* Gallery */}
         <AccommodationsGalleryClient images={images} />
 
-        <section className="mt-12 text-center">
-          <h2 className="text-2xl font-display mb-4">Experience B on the Sea</h2>
+        {/* Booking CTA */}
+        <section className="mt-16 border-t border-slate-200 pt-12 text-center sm:mt-20 sm:pt-16">
+          <p className="text-xs font-medium tracking-[0.25em] text-slate-500">
+            YOUR CARIBBEAN ESCAPE
+          </p>
+
+          <h2 className="mt-3 font-display text-3xl text-slate-900 sm:text-4xl">
+            Experience B on the Sea
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-xl text-slate-600">
+            Discover a private villa stay where beautiful surroundings, peaceful spaces, and
+            Caribbean living come together.
+          </p>
+
           <a
             href="/book-now"
-            className="inline-block bg-slate-900 text-white px-6 py-3 rounded-md hover:opacity-90 transition"
+            className="mt-7 inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 px-7 py-3.5 text-sm font-medium text-white transition-all duration-300 hover:bg-slate-800 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
           >
             Book Your Stay
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </a>
         </section>
       </main>
+
       <Footer />
     </>
   );
