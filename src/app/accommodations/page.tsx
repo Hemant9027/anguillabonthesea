@@ -68,7 +68,7 @@ export default function AccommodationsPage() {
           </h2>
 
           <p className="mx-auto mt-4 max-w-xl text-slate-600">
-            Discover a private villa stay where beautiful surroundings, peaceful spaces, and
+            Discover private villa stay where beautiful surroundings, peaceful spaces, and
             Caribbean living come together.
           </p>
 
