@@ -163,8 +163,9 @@ export default function UploadModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-[#F4EFE9] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>

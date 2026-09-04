@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   XMarkIcon,
   ExclamationCircleIcon,
@@ -29,6 +30,7 @@ export default function BookingFormModal({
   initialBooking,
 }: BookingFormModalProps) {
   const isEditing = !!initialBooking;
+  const [mounted, setMounted] = useState(false);
 
   const [guestName, setGuestName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,6 +47,10 @@ export default function BookingFormModal({
   const [nights, setNights] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Populate fields when modal opens or initialBooking changes
   useEffect(() => {
@@ -169,39 +175,36 @@ export default function BookingFormModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
-        }}
-        aria-label="Close modal"
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-      />
+  if (!isOpen || !mounted) return null;
 
-      {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-2xl bg-white rounded-3xl border border-[#E7E5E4] shadow-2xl overflow-hidden my-8">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div
+        className="bg-white rounded-3xl max-w-2xl w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-[#E7E5E4] bg-[#FDFBF7] flex items-center justify-between">
-          <div>
-            <h3 className="font-serif text-xl font-bold text-[#1C1917]">
-              {isEditing ? `Edit Booking: ${initialBooking?.bookingRef}` : "Create New Booking"}
-            </h3>
-            <p className="text-xs text-[#78716C]">
-              {isEditing
-                ? "Update reservation information and guest details"
-                : "Record a manual or direct concierge reservation"}
-            </p>
+        <div className="px-6 py-5 border-b border-[#F4EFE9] bg-gradient-to-r from-stone-50 to-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center shrink-0">
+              <CalendarDaysIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-[#1C1917]">
+                {isEditing ? `Edit Booking: ${initialBooking?.bookingRef}` : "Create New Booking"}
+              </h3>
+              <p className="text-xs text-[#78716C]">
+                {isEditing
+                  ? "Update reservation information and guest details"
+                  : "Record a manual or direct concierge reservation"}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-[#78716C] hover:text-[#1C1917] hover:bg-[#F4EFE9] transition-colors focus:outline-none"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors focus:outline-none"
             aria-label="Close dialog"
           >
             <XMarkIcon className="w-5 h-5" />
@@ -209,28 +212,28 @@ export default function BookingFormModal({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5" noValidate>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto" noValidate>
           {/* Error Banner */}
           {errorMessage && (
             <div
               role="alert"
-              className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5"
+              className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5"
             >
-              <ExclamationCircleIcon className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+              <ExclamationCircleIcon className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
               <span className="font-medium leading-relaxed">{errorMessage}</span>
             </div>
           )}
 
           {/* Section 1: Guest Details */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-3 flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3 flex items-center gap-1.5">
               <UserIcon className="w-4 h-4 text-[#C88A4B]" />
               <span>Guest Details</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1">
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Full Name *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Full Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -238,13 +241,13 @@ export default function BookingFormModal({
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   placeholder="e.g. Eleanor Vance"
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
 
               <div className="sm:col-span-1">
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Email Address *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Email Address <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -252,13 +255,13 @@ export default function BookingFormModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="guest@example.com"
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
 
               <div className="sm:col-span-1">
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Phone Number *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Phone Number <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -266,7 +269,7 @@ export default function BookingFormModal({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+1 (264) 555-0199"
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
             </div>
@@ -274,48 +277,48 @@ export default function BookingFormModal({
 
           {/* Section 2: Dates & Accommodation */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-3 flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3 flex items-center gap-1.5">
               <CalendarDaysIcon className="w-4 h-4 text-[#C88A4B]" />
               <span>Dates & Occupancy</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Check-In Date *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Check-In <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="date"
                   required
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Check-Out Date *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Check-Out <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="date"
                   required
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Calculated Nights
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Nights
                 </label>
-                <div className="w-full rounded-xl border border-[#E7E5E4] bg-[#F4EFE9] px-3 py-2 text-xs font-semibold text-[#1C1917]">
+                <div className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-[#F4EFE9] text-xs font-semibold text-stone-800">
                   {nights > 0 ? `${nights} Nights` : "Invalid dates"}
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                   Guests Count
                 </label>
                 <input
@@ -324,19 +327,19 @@ export default function BookingFormModal({
                   max="14"
                   value={guests}
                   onChange={(e) => setGuests(parseInt(e.target.value, 10) || 1)}
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
             </div>
 
             <div className="mt-3">
-              <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                 Villa / Accommodation Selection
               </label>
               <select
                 value={accommodation}
                 onChange={(e) => setAccommodation(e.target.value)}
-                className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs font-medium text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
               >
                 <option value="Villa B on the Sea (Full Villa)">
                   Villa B on the Sea (Full 5-Bedroom Estate)
@@ -353,19 +356,19 @@ export default function BookingFormModal({
 
           {/* Section 3: Financial & Status */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-3 flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3 flex items-center gap-1.5">
               <CurrencyDollarIcon className="w-4 h-4 text-[#C88A4B]" />
               <span>Pricing & Status</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-                  Total Amount (USD) *
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                  Total Amount (USD) <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-xl shadow-xs">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center text-[#78716C]">
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 font-serif font-bold text-xs">
                     $
-                  </div>
+                  </span>
                   <input
                     type="number"
                     min="0"
@@ -373,19 +376,19 @@ export default function BookingFormModal({
                     required
                     value={amount}
                     onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 pl-7 pr-3 py-2 text-xs font-semibold text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+                    className="w-full pl-8 pr-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                   Payment Status
                 </label>
                 <select
                   value={paymentStatus}
                   onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)}
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs font-medium text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
                 >
                   <option value="pending">Pending</option>
                   <option value="partially_paid">Partially Paid</option>
@@ -395,13 +398,13 @@ export default function BookingFormModal({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
+                <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                   Booking Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as BookingStatus)}
-                  className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs font-semibold text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
                 >
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
@@ -414,56 +417,35 @@ export default function BookingFormModal({
 
           {/* Section 4: Notes */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-              Internal Administrative Notes
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+              Internal Administrative Notes <span className="text-stone-400 font-normal lowercase">(optional)</span>
             </label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Guest preferences, arrival logistics, special requests..."
-              className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 p-3 text-xs text-[#1C1917] placeholder-[#78716C] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
             />
           </div>
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t border-[#E7E5E4] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#78716C] hover:text-[#1C1917] hover:bg-[#F4EFE9] transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-[#1C1917] hover:bg-[#2B2623] text-white text-xs font-semibold transition-all shadow-md disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
-                <>
-                  <svg
-                    className="animate-spin h-3.5 w-3.5 text-[#C88A4B]"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  <span>Saving Booking...</span>
-                </>
+                <span>Saving Booking...</span>
               ) : (
                 <span>{isEditing ? "Update Booking" : "Create Booking"}</span>
               )}
@@ -471,6 +453,7 @@ export default function BookingFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

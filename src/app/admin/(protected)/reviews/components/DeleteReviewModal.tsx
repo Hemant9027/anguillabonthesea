@@ -53,76 +53,84 @@ export default function DeleteReviewModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-md bg-white rounded-3xl border border-[#E7E5E4] shadow-2xl p-6 sm:p-7 z-10 my-8">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F5F5F4] mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <ExclamationTriangleIcon className="w-5 h-5" />
+        className="bg-white rounded-3xl max-w-md w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <ExclamationTriangleIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-[#1C1917]">
+                Delete Testimonial?
+              </h3>
+              <p className="text-xs text-[#78716C]">
+                Permanent action cannot be undone
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#78716C] hover:bg-[#F5F5F4] hover:text-[#1C1917] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <h3 className="font-serif text-xl font-semibold text-[#1C1917] mb-2">
-          Delete Testimonial?
-        </h3>
-        <p className="text-xs text-[#78716C] leading-relaxed mb-4">
-          Are you sure you want to permanently remove the review by{" "}
-          <strong className="text-[#1C1917] font-semibold">{review.guestName}</strong>?
-          This action cannot be undone.
-        </p>
+        {/* Body */}
+        <div className="p-6 space-y-4">
+          <p className="text-xs text-stone-600 leading-relaxed">
+            Are you sure you want to permanently remove the review by{" "}
+            <strong className="text-stone-900 font-semibold">{review.guestName}</strong>?
+            This will immediately remove it from all villa website displays.
+          </p>
 
-        <div className="p-3 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl mb-4 text-xs text-[#57534E] italic">
-          &ldquo;{review.reviewText.length > 120
-            ? `${review.reviewText.slice(0, 120)}...`
-            : review.reviewText}&rdquo;
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-            {error}
+          <div className="p-3.5 bg-stone-50/80 border border-stone-200 rounded-2xl text-xs text-stone-600 italic">
+            &ldquo;{review.reviewText.length > 130
+              ? `${review.reviewText.slice(0, 130)}...`
+              : review.reviewText}&rdquo;
           </div>
-        )}
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isDeleting}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-[#78716C] hover:bg-[#F5F5F4] hover:text-[#1C1917] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50"
-          >
-            {isDeleting ? (
-              <>
-                <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                <span>Deleting...</span>
-              </>
-            ) : (
-              <>
-                <TrashIcon className="w-4 h-4" />
-                <span>Delete Permanently</span>
-              </>
-            )}
-          </button>
+          {error && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-medium">
+              {error}
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isDeleting}
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+            >
+              {isDeleting ? (
+                <>
+                  <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <TrashIcon className="w-4 h-4" />
+                  <span>Delete Permanently</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

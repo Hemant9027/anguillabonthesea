@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   XMarkIcon,
   TagIcon,
@@ -23,6 +24,7 @@ export default function ChargeFormModal({
   onSubmit,
   editingCharge,
 }: ChargeFormModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState(250);
   const [type, setType] = useState<ChargeType>("fixed");
@@ -31,6 +33,10 @@ export default function ChargeFormModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (editingCharge) {
@@ -49,7 +55,7 @@ export default function ChargeFormModal({
     setError(null);
   }, [editingCharge, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +91,8 @@ export default function ChargeFormModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
         className="bg-white rounded-3xl max-w-lg w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
         onClick={(e) => e.stopPropagation()}
@@ -94,7 +100,7 @@ export default function ChargeFormModal({
         {/* Header */}
         <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center shrink-0">
               <TagIcon className="w-5 h-5" />
             </div>
             <div>
@@ -109,15 +115,16 @@ export default function ChargeFormModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-[#F4EFE9] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {error && (
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-800 text-xs">
               <ExclamationCircleIcon className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
@@ -136,7 +143,7 @@ export default function ChargeFormModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Deep Cleaning Fee, Tourism Levy"
               required
-              className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
             />
           </div>
 
@@ -149,7 +156,7 @@ export default function ChargeFormModal({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as ChargeType)}
-                className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
               >
                 <option value="fixed">Fixed (Flat Amount)</option>
                 <option value="percentage">Percentage of Stay (%)</option>
@@ -163,7 +170,7 @@ export default function ChargeFormModal({
                 Amount ({type === "percentage" ? "%" : "USD"}{" "}) <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 font-serif font-bold text-sm">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 font-serif font-bold text-xs">
                   {type === "percentage" ? "%" : "$"}
                 </span>
                 <input
@@ -173,14 +180,14 @@ export default function ChargeFormModal({
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   required
-                  className="w-full pl-8 pr-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 font-semibold transition-colors"
+                  className="w-full pl-8 pr-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
             </div>
           </div>
 
           {/* Type Helper Note */}
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/70 text-[11px] text-stone-600 flex items-center gap-2">
+          <div className="p-3.5 bg-stone-50/80 rounded-2xl border border-stone-200/80 text-xs text-stone-600 flex items-center gap-2.5">
             <InformationCircleIcon className="w-4 h-4 text-[#C88A4B] shrink-0" />
             <span>
               {type === "fixed" && "Charged once per entire reservation regardless of length or guests."}
@@ -193,19 +200,19 @@ export default function ChargeFormModal({
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1.5">
-              Description / Note
+              Description / Note <span className="text-stone-400 font-normal lowercase">(optional)</span>
             </label>
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g., Mandatory sanitization and linen turnover post-checkout."
-              className="w-full px-3.5 py-2 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors resize-none"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all resize-none"
             />
           </div>
 
           {/* Active Status */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F4EFE9]/40 border border-[#E7E5E4]">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-stone-50/80 border border-stone-200/80">
             <div>
               <p className="text-xs font-bold text-stone-800">Charge Active</p>
               <p className="text-[11px] text-stone-500">
@@ -224,18 +231,18 @@ export default function ChargeFormModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#F4EFE9]">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C88A4B] to-[#B07338] text-white text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting
                 ? "Saving..."
@@ -246,6 +253,7 @@ export default function ChargeFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

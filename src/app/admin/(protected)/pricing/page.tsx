@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   TrashIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   BaseRateConfig,
@@ -383,43 +384,63 @@ export default function AdminPricingPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div
-            className="bg-white rounded-3xl max-w-md w-full border border-[#E7E5E4] shadow-2xl p-6 space-y-4 animate-scale-up"
+            className="bg-white rounded-3xl max-w-md w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
-              <TrashIcon className="w-6 h-6" />
-            </div>
-            <div className="text-center space-y-1">
-              <h3 className="font-serif text-lg font-bold text-stone-900">
-                Delete {deleteTarget.type === "season" ? "Seasonal Tier" : "Charge"}?
-              </h3>
-              <p className="text-xs text-stone-500 leading-relaxed">
-                Are you sure you want to permanently remove{" "}
-                <span className="font-bold text-stone-800">
-                  &ldquo;{deleteTarget.name}&rdquo;
-                </span>
-                ? Future calculations will no longer apply this rule.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-3 pt-2">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                  <TrashIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#1C1917]">
+                    Delete {deleteTarget.type === "season" ? "Seasonal Tier" : "Charge"}?
+                  </h3>
+                  <p className="text-xs text-[#78716C]">
+                    Permanent rule removal
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                disabled={isDeleting}
-                className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors"
+                className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
               >
-                Cancel
+                <XMarkIcon className="w-5 h-5" />
               </button>
-              <button
-                type="button"
-                onClick={executeDelete}
-                disabled={isDeleting}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isDeleting ? "Deleting..." : "Confirm Delete"}
-              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Are you sure you want to permanently remove{" "}
+                <strong className="text-stone-900 font-semibold">
+                  &ldquo;{deleteTarget.name}&rdquo;
+                </strong>
+                ? Future quote calculations will no longer apply this rule.
+              </p>
+
+              <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={executeDelete}
+                  disabled={isDeleting}
+                  className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? "Deleting..." : "Confirm Delete"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

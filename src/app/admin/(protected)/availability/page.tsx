@@ -63,15 +63,16 @@ export default function AdminAvailabilityPage() {
         if (json.success && json.data) {
           setAvailabilityData(json.data);
 
-          // If a day was selected in the drawer, keep its details updated
-          if (selectedDay) {
+          // If a day was selected in the drawer, keep its details updated without triggering infinite loops
+          setSelectedDay((prev) => {
+            if (!prev) return null;
             const updated = json.data.days.find(
-              (d: CalendarDay) => d.date === selectedDay.date
+              (d: CalendarDay) => d.date === prev.date
             );
-            if (updated) setSelectedDay(updated);
-          }
+            return updated || prev;
+          });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Availability fetch error:", err);
         setErrorMessage(
           "Unable to load calendar availability. Please check your connection."
@@ -81,7 +82,7 @@ export default function AdminAvailabilityPage() {
         setIsRefreshing(false);
       }
     },
-    [selectedDay]
+    []
   );
 
   useEffect(() => {

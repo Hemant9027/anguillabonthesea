@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ExclamationTriangleIcon,
   XMarkIcon,
@@ -20,10 +21,15 @@ export default function CancelConfirmModal({
   onClose,
   onConfirm,
 }: CancelConfirmModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [reason, setReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
 
-  if (!isOpen || !booking) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !booking || !mounted) return null;
 
   const handleConfirm = async () => {
     if (isCancelling) return;
@@ -37,78 +43,80 @@ export default function CancelConfirmModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
-        }}
-        aria-label="Close dialog"
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-      />
-
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       {/* Modal Card */}
-      <div className="relative z-10 w-full max-w-md bg-white rounded-3xl border border-[#E7E5E4] shadow-2xl p-6 overflow-hidden">
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-            <ExclamationTriangleIcon className="w-6 h-6" />
+      <div
+        className="bg-white rounded-3xl max-w-md w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <ExclamationTriangleIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-[#1C1917]">
+                Cancel Reservation?
+              </h3>
+              <p className="text-xs text-[#78716C]">
+                Ref: {booking.bookingRef}
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#78716C] hover:text-[#1C1917] hover:bg-[#F4EFE9]"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <h3 className="font-serif text-lg font-bold text-[#1C1917] mb-2">
-          Cancel Reservation {booking.bookingRef}?
-        </h3>
-        <p className="text-xs text-[#78716C] leading-relaxed mb-4">
-          Are you sure you want to cancel the booking for{" "}
-          <strong className="text-[#1C1917]">{booking.guestName}</strong> (
-          {booking.checkIn} to {booking.checkOut})? The reservation will be
-          marked as <strong className="text-red-600">Cancelled</strong> in the
-          system and dates will be freed for new inquiries.
-        </p>
+        {/* Body */}
+        <div className="p-6 space-y-4">
+          <p className="text-xs text-stone-600 leading-relaxed">
+            Are you sure you want to cancel the booking for{" "}
+            <strong className="text-stone-900 font-semibold">{booking.guestName}</strong> (
+            {booking.checkIn} to {booking.checkOut})? The reservation will be
+            marked as <strong className="text-rose-600">Cancelled</strong> and dates will be released.
+          </p>
 
-        <div className="mb-5">
-          <label className="block text-[11px] font-semibold text-[#44403C] mb-1">
-            Cancellation Reason (optional note)
-          </label>
-          <input
-            type="text"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Guest requested refund, weather disruption..."
-            className="w-full rounded-xl border border-[#D8D2C6] bg-[#FDFBF7]/60 px-3 py-2 text-xs text-[#1C1917] focus:bg-white focus:border-[#C88A4B] focus:ring-2 focus:ring-[#C88A4B]/20 outline-none transition-all"
-          />
-        </div>
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+              Cancellation Reason <span className="text-stone-400 font-normal lowercase">(optional note)</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Guest requested refund, travel disruption..."
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
+            />
+          </div>
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4EFE9]">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isCancelling}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-[#78716C] hover:text-[#1C1917] hover:bg-[#F4EFE9] transition-colors"
-          >
-            Keep Booking
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={isCancelling}
-            className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
-          >
-            {isCancelling ? "Cancelling..." : "Confirm Cancellation"}
-          </button>
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isCancelling}
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
+            >
+              Keep Booking
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={isCancelling}
+              className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {isCancelling ? "Cancelling..." : "Confirm Cancellation"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

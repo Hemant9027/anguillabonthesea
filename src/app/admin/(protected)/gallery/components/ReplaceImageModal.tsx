@@ -123,15 +123,16 @@ export default function ReplaceImageModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-[#F4EFE9] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {error && (
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-800 text-xs">
               <ExclamationCircleIcon className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
@@ -142,10 +143,10 @@ export default function ReplaceImageModal({
           {/* Current vs New comparison */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <span className="block text-[11px] font-semibold text-stone-500 mb-1">
+              <span className="block text-xs font-semibold text-stone-700 mb-1.5">
                 Current Photo
               </span>
-              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 border border-stone-200">
+              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200">
                 <Image
                   src={item.url}
                   alt={item.title}
@@ -156,13 +157,13 @@ export default function ReplaceImageModal({
             </div>
 
             <div>
-              <span className="block text-[11px] font-semibold text-stone-500 mb-1">
+              <span className="block text-xs font-semibold text-stone-700 mb-1.5">
                 New Photo
               </span>
               {previewUrl ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 border-2 border-[#C88A4B] cursor-pointer group"
+                  className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 border-2 border-[#C88A4B] cursor-pointer group"
                 >
                   <Image
                     src={previewUrl}
@@ -177,7 +178,7 @@ export default function ReplaceImageModal({
               ) : (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="aspect-[4/3] rounded-xl border-2 border-dashed border-stone-300 hover:border-[#C88A4B] flex flex-col items-center justify-center p-3 text-center cursor-pointer bg-stone-50 transition-colors"
+                  className="aspect-[4/3] rounded-2xl border-2 border-dashed border-stone-300 hover:border-[#C88A4B] flex flex-col items-center justify-center p-3 text-center cursor-pointer bg-stone-50/70 transition-colors"
                 >
                   <PhotoIcon className="w-6 h-6 text-stone-400 mb-1" />
                   <span className="text-[11px] font-bold text-stone-600">
@@ -201,44 +202,44 @@ export default function ReplaceImageModal({
           />
 
           {/* Title and Alt Text optional overrides */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-3 pt-1">
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Image Title
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                Image Title <span className="text-stone-400 font-normal lowercase">(optional)</span>
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Alt Text (SEO)
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                Alt Text (SEO) <span className="text-stone-400 font-normal lowercase">(optional)</span>
               </label>
               <textarea
                 rows={2}
                 value={altText}
                 onChange={(e) => setAltText(e.target.value)}
-                className="w-full px-3.5 py-2 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors resize-none"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all resize-none"
               />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#F4EFE9]">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !selectedFile}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C88A4B] to-[#B07338] text-white text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? "Uploading Replacement..." : "Replace File"}
             </button>

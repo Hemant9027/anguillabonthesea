@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   XMarkIcon,
   UserIcon,
@@ -31,18 +32,23 @@ export default function BookingDetailDrawer({
   onStatusChange,
   onNotesSave,
 }: BookingDetailDrawerProps) {
+  const [mounted, setMounted] = useState(false);
   const [notesText, setNotesText] = useState(booking?.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Sync state when booking changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (booking) {
       setNotesText(booking.notes || "");
     }
   }, [booking]);
 
-  if (!booking) return null;
+  if (!booking || !mounted) return null;
 
   const handleStatusClick = async (status: BookingStatus) => {
     if (isUpdatingStatus || status === booking.status) return;
@@ -73,46 +79,44 @@ export default function BookingDetailDrawer({
     }).format(val);
   };
 
-  return (
-    <>
-      {/* Backdrop */}
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       <div
-        role="button"
-        tabIndex={0}
-        onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
-        }}
-        aria-label="Close booking details drawer"
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 transition-opacity"
-      />
-
-      {/* Slide-over Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col justify-between overflow-y-auto transform transition-transform duration-300 ease-in-out">
+        className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto border-l border-[#E7E5E4] animate-slide-left"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Header */}
         <div>
-          <div className="p-5 sm:p-6 border-b border-[#E7E5E4] bg-[#FDFBF7] flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold bg-[#1C1917] text-white px-2.5 py-1 rounded-md">
-                  {booking.bookingRef}
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#78716C]">
-                  {booking.status}
-                </span>
+          <div className="px-6 py-5 border-b border-[#F4EFE9] bg-gradient-to-r from-stone-50 to-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center shrink-0">
+                <CalendarDaysIcon className="w-5 h-5" />
               </div>
-              <h2 className="font-serif text-xl font-bold text-[#1C1917] mt-1">
-                {booking.guestName}
-              </h2>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-mono text-[11px] font-bold bg-stone-900 text-white px-2 py-0.5 rounded-md">
+                    {booking.bookingRef}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C88A4B]">
+                    {booking.status}
+                  </span>
+                </div>
+                <h2 className="font-serif text-lg font-bold text-[#1C1917]">
+                  {booking.guestName}
+                </h2>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-[#78716C] hover:text-[#1C1917] hover:bg-[#F4EFE9] transition-colors focus:outline-none"
+              className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors focus:outline-none"
               aria-label="Close drawer"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
 
@@ -293,6 +297,7 @@ export default function BookingDetailDrawer({
           )}
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }

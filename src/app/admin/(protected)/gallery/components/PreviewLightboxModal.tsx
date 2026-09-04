@@ -92,10 +92,11 @@ export default function PreviewLightboxModal({
               <ArrowTopRightOnSquareIcon className="w-5 h-5" />
             </a>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
         </div>

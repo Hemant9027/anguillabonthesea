@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   XMarkIcon,
   CalendarDaysIcon,
@@ -23,6 +24,7 @@ export default function SeasonFormModal({
   onSubmit,
   editingSeason,
 }: SeasonFormModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -33,6 +35,10 @@ export default function SeasonFormModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (editingSeason) {
@@ -60,7 +66,7 @@ export default function SeasonFormModal({
     setError(null);
   }, [editingSeason, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,8 +112,8 @@ export default function SeasonFormModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
         className="bg-white rounded-3xl max-w-xl w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
         onClick={(e) => e.stopPropagation()}
@@ -115,7 +121,7 @@ export default function SeasonFormModal({
         {/* Header */}
         <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center shrink-0">
               <CalendarDaysIcon className="w-5 h-5" />
             </div>
             <div>
@@ -130,15 +136,16 @@ export default function SeasonFormModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-[#F4EFE9] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {error && (
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-800 text-xs">
               <ExclamationCircleIcon className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
@@ -157,7 +164,7 @@ export default function SeasonFormModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Festive Holiday Season 2026-2027"
               required
-              className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
             />
           </div>
 
@@ -172,7 +179,7 @@ export default function SeasonFormModal({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
             <div>
@@ -184,7 +191,7 @@ export default function SeasonFormModal({
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
           </div>
@@ -206,7 +213,7 @@ export default function SeasonFormModal({
                   value={nightlyRate}
                   onChange={(e) => setNightlyRate(Number(e.target.value))}
                   required
-                  className="w-full pl-8 pr-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 font-semibold transition-colors"
+                  className="w-full pl-8 pr-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
                 />
               </div>
             </div>
@@ -221,7 +228,7 @@ export default function SeasonFormModal({
                 value={minStay}
                 onChange={(e) => setMinStay(Number(e.target.value))}
                 required
-                className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 font-semibold transition-colors"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
           </div>
@@ -229,19 +236,19 @@ export default function SeasonFormModal({
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1.5">
-              Description / Internal Notes
+              Description / Internal Notes <span className="text-stone-400 font-normal lowercase">(optional)</span>
             </label>
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g., Applies to Thanksgiving and Christmas window; requires full non-refundable deposit."
-              className="w-full px-3.5 py-2 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors resize-none"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all resize-none"
             />
           </div>
 
           {/* Active Status */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F4EFE9]/40 border border-[#E7E5E4]">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-stone-50/80 border border-stone-200/80">
             <div className="flex items-center gap-2.5">
               <InformationCircleIcon className="w-5 h-5 text-[#C88A4B]" />
               <div>
@@ -263,18 +270,18 @@ export default function SeasonFormModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#F4EFE9]">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C88A4B] to-[#B07338] text-white text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting
                 ? "Saving..."
@@ -285,6 +292,7 @@ export default function SeasonFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

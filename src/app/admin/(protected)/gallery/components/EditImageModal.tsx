@@ -102,8 +102,9 @@ export default function EditImageModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-[#F4EFE9] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -119,7 +120,7 @@ export default function EditImageModal({
           )}
 
           {/* Thumbnail preview */}
-          <div className="flex items-center gap-4 p-3 bg-stone-50 rounded-2xl border border-stone-200">
+          <div className="flex items-center gap-4 p-3 bg-stone-50/80 rounded-2xl border border-stone-200">
             <div className="relative w-20 h-16 rounded-xl overflow-hidden bg-stone-200 shrink-0">
               <Image
                 src={item.url}
@@ -145,7 +146,7 @@ export default function EditImageModal({
             <select
               value={section}
               onChange={(e) => setSection(e.target.value as GallerySectionKey)}
-              className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
             >
               {GALLERY_SECTIONS.map((sec) => (
                 <option key={sec.key} value={sec.key}>
@@ -168,7 +169,7 @@ export default function EditImageModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
             />
           </div>
 
@@ -187,12 +188,12 @@ export default function EditImageModal({
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
               placeholder="Descriptive explanation of what is pictured..."
-              className="w-full px-3.5 py-2 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#C88A4B] focus:bg-white text-stone-800 transition-colors resize-none"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all resize-none"
             />
           </div>
 
           {/* Display Status */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F4EFE9]/40 border border-[#E7E5E4]">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-stone-50/80 border border-stone-200/80">
             <div className="flex items-center gap-2.5">
               <InformationCircleIcon className="w-5 h-5 text-[#C88A4B]" />
               <div>
@@ -214,18 +215,18 @@ export default function EditImageModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#F4EFE9]">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C88A4B] to-[#B07338] text-white text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>

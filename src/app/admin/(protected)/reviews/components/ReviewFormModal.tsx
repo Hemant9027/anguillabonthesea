@@ -123,47 +123,49 @@ export default function ReviewFormModal({
   const currentDisplayRating = hoverRating !== null ? hoverRating : rating;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Container */}
-      <div className="relative w-full max-w-xl bg-white rounded-3xl border border-[#E7E5E4] shadow-2xl p-6 sm:p-8 z-10 my-8">
+        className="bg-white rounded-3xl max-w-xl w-full border border-[#E7E5E4] shadow-2xl overflow-hidden animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#F5F5F4] mb-5">
-          <div>
-            <h2 className="font-serif text-xl sm:text-2xl font-semibold text-[#1C1917]">
-              {mode === "add" ? "Add Guest Review" : "Edit Guest Review"}
-            </h2>
-            <p className="text-xs text-[#78716C] mt-0.5">
-              {mode === "add"
-                ? "Enter guest testimonial details for the villa website."
-                : "Modify guest information, ratings, or publishing status."}
-            </p>
+        <div className="px-6 py-5 border-b border-[#F4EFE9] flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#F4EFE9] text-[#C88A4B] flex items-center justify-center shrink-0">
+              <StarSolid className="w-5 h-5 fill-[#C88A4B]" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-[#1C1917]">
+                {mode === "add" ? "Add Guest Review" : "Edit Guest Review"}
+              </h3>
+              <p className="text-xs text-[#78716C]">
+                {mode === "add"
+                  ? "Enter guest testimonial details for the villa website"
+                  : "Modify guest information, ratings, or publishing status"}
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#78716C] hover:bg-[#F5F5F4] hover:text-[#1C1917] transition-colors"
+            className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-[#F4EFE9] transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-            {error}
-          </div>
-        )}
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          {error && (
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-800 text-xs">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Guest Name & Location */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                 Guest Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -172,30 +174,30 @@ export default function ReviewFormModal({
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 placeholder="e.g. Sophia & David Montgomery"
-                className="w-full px-3.5 py-2.5 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl text-xs text-[#1C1917] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
-                Guest Location <span className="text-[#A8A29E] font-normal lowercase">(optional)</span>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                Guest Location <span className="text-stone-400 font-normal lowercase">(optional)</span>
               </label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. New York, NY or London, UK"
-                className="w-full px-3.5 py-2.5 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl text-xs text-[#1C1917] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
           </div>
 
           {/* Interactive Star Rating Picker */}
           <div>
-            <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
               Star Rating <span className="text-rose-500">*</span>
             </label>
-            <div className="flex items-center gap-2 p-3 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl">
+            <div className="flex items-center gap-3 p-3.5 bg-stone-50/70 border border-stone-200 rounded-2xl">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -215,7 +217,7 @@ export default function ReviewFormModal({
                   </button>
                 ))}
               </div>
-              <span className="text-xs font-medium text-[#78716C] ml-2">
+              <span className="text-xs font-medium text-stone-600 ml-1">
                 {getRatingLabel(currentDisplayRating)}
               </span>
             </div>
@@ -224,7 +226,7 @@ export default function ReviewFormModal({
           {/* Date and Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                 Review / Stay Date <span className="text-rose-500">*</span>
               </label>
               <input
@@ -232,18 +234,18 @@ export default function ReviewFormModal({
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                 Publishing Status <span className="text-rose-500">*</span>
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ReviewStatus)}
-                className="w-full px-3.5 py-2.5 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
               >
                 <option value="published">Published (Visible on public site)</option>
                 <option value="draft">Draft (Review internally first)</option>
@@ -254,7 +256,7 @@ export default function ReviewFormModal({
 
           {/* Review Text */}
           <div>
-            <label className="block text-xs font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
               Review Content / Testimonial Quote <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -263,24 +265,24 @@ export default function ReviewFormModal({
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               placeholder="Enter the guest's detailed review or testimonial quote..."
-              className="w-full px-3.5 py-2.5 bg-[#FBFBFA] border border-[#E7E5E4] rounded-xl text-xs text-[#1C1917] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all leading-relaxed"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all leading-relaxed"
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#78716C] hover:bg-[#F5F5F4] hover:text-[#1C1917] transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#C88A4B] hover:bg-[#B3783E] text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
