@@ -104,7 +104,7 @@ export default function RatesTable() {
       };
 
       const year = d.getFullYear();
-      let start = parseMonthDay(r.from, year);
+      const start = parseMonthDay(r.from, year);
       let end = parseMonthDay(r.to, year);
       if (!start || !end) continue;
       if (end < start) end = new Date(end.getFullYear() + 1, end.getMonth(), end.getDate());

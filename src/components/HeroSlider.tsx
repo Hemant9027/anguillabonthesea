@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const slides = [
   {
@@ -79,7 +79,7 @@ export default function HeroSlider() {
           className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition hover:border-amber-300 hover:text-amber-300"
           aria-label="Previous slide"
         >
-          <ChevronLeft size={22} />
+          <ChevronLeftIcon className="w-5 h-5" />
         </button>
         <button
           type="button"
@@ -87,7 +87,7 @@ export default function HeroSlider() {
           className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition hover:border-amber-300 hover:text-amber-300"
           aria-label="Next slide"
         >
-          <ChevronRight size={22} />
+          <ChevronRightIcon className="w-5 h-5" />
         </button>
       </div>
     </section>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { AUTH_CONFIG } from "@/lib/auth/config";
 import { createSessionToken } from "@/lib/auth/session";
+import { authenticateAdmin } from "@/lib/db/services/adminProfileService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,11 +34,10 @@ export async function POST(request: NextRequest) {
     const cleanUsername = username.trim();
     const cleanPassword = password;
 
-    // Constant-time-like or direct comparison for dev credentials
-    const isUsernameValid = cleanUsername === AUTH_CONFIG.adminUsername;
-    const isPasswordValid = cleanPassword === AUTH_CONFIG.adminPassword;
+    // Verify credentials via MongoDB adminProfileService (with config fallback)
+    const authResult = await authenticateAdmin(cleanUsername, cleanPassword);
 
-    if (!isUsernameValid || !isPasswordValid) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
         { error: "Invalid username or password." },
         { status: 401 }
@@ -45,13 +45,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate signed session token
-    const token = await createSessionToken(cleanUsername);
+    const token = await createSessionToken(authResult.user.username);
 
     const response = NextResponse.json({
       success: true,
       message: "Authentication successful",
       user: {
-        username: cleanUsername,
+        username: authResult.user.username,
+        displayName: authResult.user.displayName,
         role: "admin",
       },
     });

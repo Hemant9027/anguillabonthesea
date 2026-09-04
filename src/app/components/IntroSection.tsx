@@ -67,7 +67,7 @@ export default function IntroSection() {
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
             Nestled on Sandy Hill Beach, Villa B on the Sea sits on the #1 Caribbean island as
-            ranked by Travel + Leisure's World's Best Awards — four years in a row.
+            ranked by Travel + Leisure&apos;s World&apos;s Best Awards — four years in a row.
           </p>
         </div>
 

@@ -63,7 +63,7 @@ export default function AdminSidebar({
     }
   };
 
-  const NavContent = () => (
+  const renderNavContent = () => (
     <div className="flex flex-col h-full justify-between bg-[#1C1917] text-white select-none">
       {/* Top Brand / Header */}
       <div>
@@ -178,7 +178,7 @@ export default function AdminSidebar({
     <>
       {/* Desktop Sidebar (Fixed) */}
       <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 z-30 shadow-2xl">
-        <NavContent />
+        {renderNavContent()}
       </aside>
 
       {/* Mobile Drawer Backdrop */}
@@ -201,7 +201,7 @@ export default function AdminSidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <NavContent />
+        {renderNavContent()}
       </div>
     </>
   );
