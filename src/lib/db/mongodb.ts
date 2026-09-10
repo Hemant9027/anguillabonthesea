@@ -1,6 +1,11 @@
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/anguillabonthesea";
+const uri = process.env.MONGODB_URI;
+if (!uri) {
+  throw new Error(
+    'Missing environment variable "MONGODB_URI". Set it in your .env file or deployment environment (e.g. Vercel, Railway, etc.).'
+  );
+}
 const options = {
   serverSelectionTimeoutMS: 5000,
 };
@@ -28,7 +33,7 @@ if (process.env.NODE_ENV === "development") {
 
 export default clientPromise;
 
-export async function getDatabase(dbName = "anguillabonthesea") {
+export async function getDatabase(dbName = "websiteexpertz") {
   const client = await clientPromise;
   return client.db(dbName);
 }
