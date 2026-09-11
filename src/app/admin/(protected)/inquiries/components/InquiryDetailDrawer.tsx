@@ -26,6 +26,8 @@ interface InquiryDetailDrawerProps {
   onToggleRead: (inquiry: CustomerInquiry) => Promise<void>;
   onAddNote: (id: string, noteText: string) => Promise<void>;
   onDelete: (inquiry: CustomerInquiry) => void;
+  onConfirmBooking: (inquiry: CustomerInquiry) => Promise<void>;
+  onRequestReject: (inquiry: CustomerInquiry) => void;
 }
 
 export default function InquiryDetailDrawer({
@@ -36,10 +38,13 @@ export default function InquiryDetailDrawer({
   onToggleRead,
   onAddNote,
   onDelete,
+  onConfirmBooking,
+  onRequestReject,
 }: InquiryDetailDrawerProps) {
   const [mounted, setMounted] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -71,6 +76,25 @@ export default function InquiryDetailDrawer({
     }
   };
 
+  const handleConfirmClick = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to confirm this booking for ${inquiry.name} from ${inquiry.checkIn} to ${inquiry.checkOut}?\n\nThis will create a confirmed booking and immediately block these dates on the live website calendar.`
+      )
+    ) {
+      return;
+    }
+
+    setIsConfirming(true);
+    try {
+      await onConfirmBooking(inquiry);
+    } catch (err: any) {
+      alert(err.message || "Failed to confirm booking");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   const formattedDate = new Date(inquiry.createdAt).toLocaleDateString("en-US", {
     weekday: "short",
     month: "long",
@@ -79,6 +103,11 @@ export default function InquiryDetailDrawer({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const isConfirmed = inquiry.status === "confirmed";
+  const isRejected = inquiry.status === "rejected";
+  const hasDates = !!(inquiry.checkIn && inquiry.checkOut);
+  const isAvailable = inquiry.availability?.isAvailable;
 
   return createPortal(
     <div
@@ -141,6 +170,8 @@ export default function InquiryDetailDrawer({
                 <option value="new">New Lead</option>
                 <option value="contacted">Contacted</option>
                 <option value="in_progress">In Progress</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="rejected">Rejected</option>
                 <option value="resolved">Resolved</option>
                 <option value="archived">Archived</option>
               </select>
@@ -167,6 +198,102 @@ export default function InquiryDetailDrawer({
               )}
             </div>
           </div>
+
+          {/* Date Availability & Booking Action Banner */}
+          {hasDates && (
+            <div
+              className={`p-5 rounded-2xl border transition-all ${
+                isConfirmed
+                  ? "bg-emerald-50/80 border-emerald-300 text-emerald-950"
+                  : isRejected
+                  ? "bg-rose-50/80 border-rose-200 text-rose-950"
+                  : isAvailable
+                  ? "bg-emerald-50/50 border-emerald-200 text-emerald-950"
+                  : "bg-amber-50/70 border-amber-200 text-amber-950"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70 mb-1">
+                    Calendar Availability Check
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <CalendarDaysIcon className="w-4 h-4 text-[#C88A4B]" />
+                    <span className="font-bold text-sm">
+                      {inquiry.checkIn} → {inquiry.checkOut}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                {isConfirmed ? (
+                  <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs">
+                    Booking Confirmed
+                  </span>
+                ) : isRejected ? (
+                  <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold shadow-xs">
+                    Rejected
+                  </span>
+                ) : isAvailable ? (
+                  <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-200 animate-ping" />
+                    Dates Available
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold shadow-xs">
+                    Dates Conflict
+                  </span>
+                )}
+              </div>
+
+              {/* Conflict / Status details */}
+              <div className="text-xs mb-4 leading-relaxed">
+                {isConfirmed ? (
+                  <p className="text-emerald-800 font-medium">
+                    This inquiry is confirmed as booking <strong>#{inquiry.bookingRef || "CONFIRMED"}</strong>. The requested dates are now locked on the live website calendar.
+                  </p>
+                ) : isRejected ? (
+                  <p className="text-rose-800 font-medium">
+                    This inquiry was rejected. Reason: <em>&ldquo;{inquiry.rejectionReason || "Dates unavailable"}&rdquo;</em>. Dates remain open on the calendar.
+                  </p>
+                ) : isAvailable ? (
+                  <p className="text-emerald-800">
+                    Villa is 100% free with no conflicting reservations or maintenance holds. You can confirm this booking directly.
+                  </p>
+                ) : (
+                  <p className="text-rose-800 font-medium">
+                    ⚠️ {inquiry.availability?.conflictReason || "Requested dates overlap with another reservation or maintenance block."}
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons if not already confirmed or rejected */}
+              {!isConfirmed && !isRejected && (
+                <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-black/5">
+                  <button
+                    type="button"
+                    disabled={isConfirming || !isAvailable}
+                    onClick={handleConfirmClick}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircleIcon className="w-4 h-4" />
+                    <span>
+                      {isConfirming ? "Locking Dates..." : "Confirm Booking & Block Dates"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onRequestReject(inquiry)}
+                    className="px-4 py-2 rounded-xl bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <XMarkIcon className="w-4 h-4 text-rose-500" />
+                    <span>Reject Inquiry</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Customer Contacts */}
           <div className="space-y-2">

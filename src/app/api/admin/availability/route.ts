@@ -10,6 +10,8 @@ function isValidDateString(d: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d).getTime());
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -27,10 +29,17 @@ export async function GET(request: NextRequest) {
 
     const data = await getMonthAvailability(year, month);
 
-    return NextResponse.json({
-      success: true,
-      data,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching availability:", error);
     return NextResponse.json(

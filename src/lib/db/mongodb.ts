@@ -33,7 +33,7 @@ if (process.env.NODE_ENV === "development") {
 
 export default clientPromise;
 
-export async function getDatabase(dbName = "websiteexpertz") {
+export async function getDatabase(dbName?: string) {
   const client = await clientPromise;
-  return client.db(dbName);
+  return client.db(dbName || process.env.MONGODB_DB || "anguillabonthesea");
 }

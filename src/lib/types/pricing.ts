@@ -11,9 +11,16 @@ export interface BaseRateConfig {
 export interface SeasonalRule {
   _id: string;
   name: string;
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
-  nightlyRate: number;
+  startDate?: string; // YYYY-MM-DD or MM-DD
+  endDate?: string; // YYYY-MM-DD or MM-DD
+  from?: string; // e.g. "May 1"
+  to?: string; // e.g. "Nov 14"
+  dateRange?: string; // e.g. "May 1 – Nov 14"
+  nightlyRate: number; // e.g. 1200
+  perNight?: number; // alias for nightlyRate
+  weekendNight?: number; // e.g. 1400
+  weekly?: number; // e.g. 7500
+  monthly?: number | null; // e.g. 22000 or null
   minStay: number;
   description?: string;
   isActive: boolean;
@@ -26,6 +33,7 @@ export interface AdditionalCharge {
   name: string;
   amount: number;
   type: ChargeType;
+  appliedTo?: string; // e.g. "Applied to total rental"
   description?: string;
   isActive: boolean;
   createdAt: string;
@@ -61,10 +69,17 @@ export interface PricingCalculationResult {
 
 export interface CreateSeasonDto {
   name: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
+  from?: string;
+  to?: string;
+  dateRange?: string;
   nightlyRate: number;
-  minStay: number;
+  perNight?: number;
+  weekendNight?: number;
+  weekly?: number;
+  monthly?: number | null;
+  minStay?: number;
   description?: string;
   isActive?: boolean;
 }
@@ -73,6 +88,7 @@ export interface CreateChargeDto {
   name: string;
   amount: number;
   type: ChargeType;
+  appliedTo?: string;
   description?: string;
   isActive?: boolean;
 }

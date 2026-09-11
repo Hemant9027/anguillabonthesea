@@ -57,17 +57,20 @@ export default function CalendarGrid({
       return "opacity-35 bg-[#FDFBF7]/40 text-[#A8A29E]";
     }
 
-    switch (day.status) {
-      case "booked":
-        return "bg-[#1C1917] text-white hover:bg-[#2B2623] border-[#1C1917]";
-      case "blocked":
-        return "bg-stone-100 text-[#44403C] hover:bg-stone-200 border-stone-300";
-      case "pending":
-        return "bg-amber-50 text-amber-900 hover:bg-amber-100 border-amber-300";
-      case "available":
-      default:
-        return "bg-white text-[#1C1917] hover:bg-[#FDFBF7] hover:border-[#C88A4B] border-[#E7E5E4]";
+    if (day.status === "booked") {
+      return "bg-[#1C1917] text-white hover:bg-[#2B2623] border-[#1C1917]";
     }
+    if (day.status === "blocked") {
+      return "bg-stone-100 text-[#44403C] hover:bg-stone-200 border-stone-300";
+    }
+    if (day.status === "pending") {
+      return "bg-amber-50 text-amber-900 hover:bg-amber-100 border-amber-300";
+    }
+    if (day.isCheckOut) {
+      return "bg-amber-50/80 text-[#1C1917] hover:bg-amber-100/90 border-amber-300";
+    }
+
+    return "bg-white text-[#1C1917] hover:bg-[#FDFBF7] hover:border-[#C88A4B] border-[#E7E5E4]";
   };
 
   return (
@@ -212,16 +215,28 @@ export default function CalendarGrid({
                       {day.dayOfMonth}
                     </span>
 
-                    {/* Mini indicator icon */}
-                    {day.status === "booked" && (
-                      <span className="w-2 h-2 rounded-full bg-[#C88A4B] shrink-0" />
-                    )}
-                    {day.status === "blocked" && (
-                      <LockClosedIcon className="w-3.5 h-3.5 text-stone-500 shrink-0" />
-                    )}
-                    {day.status === "pending" && (
-                      <ClockIcon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    )}
+                    {/* Mini indicator icon or Arrival/Departure badges */}
+                    <div className="flex items-center gap-1">
+                      {day.isCheckIn && day.status === "booked" && (
+                        <span className="text-[8px] font-bold uppercase tracking-wider bg-[#C88A4B] text-white px-1 py-0.5 rounded leading-none">
+                          Arrival
+                        </span>
+                      )}
+                      {day.isCheckOut && (
+                        <span className="text-[8px] font-bold uppercase tracking-wider bg-amber-200 text-amber-900 border border-amber-300 px-1 py-0.5 rounded leading-none">
+                          Departure
+                        </span>
+                      )}
+                      {day.status === "booked" && !day.isCheckIn && (
+                        <span className="w-2 h-2 rounded-full bg-[#C88A4B] shrink-0" />
+                      )}
+                      {day.status === "blocked" && (
+                        <LockClosedIcon className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                      )}
+                      {day.status === "pending" && (
+                        <ClockIcon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      )}
+                    </div>
                   </div>
 
                   {/* Middle / Bottom Content */}
@@ -259,7 +274,18 @@ export default function CalendarGrid({
                       </div>
                     )}
 
-                    {day.status === "available" && day.isCurrentMonth && (
+                    {day.status === "available" && day.isCheckOut && day.bookingDetails && (
+                      <div className="text-[10px] sm:text-[11px] leading-tight truncate">
+                        <p className="font-semibold text-amber-900 truncate">
+                          Out: {day.bookingDetails.guestName}
+                        </p>
+                        <p className="text-amber-700 truncate text-[9px]">
+                          {day.bookingDetails.bookingRef}
+                        </p>
+                      </div>
+                    )}
+
+                    {day.status === "available" && !day.isCheckOut && day.isCurrentMonth && (
                       <div className="text-[10px] text-emerald-600 font-medium hidden sm:block">
                         Available
                       </div>
@@ -294,6 +320,8 @@ export default function CalendarGrid({
                         ? "bg-stone-200 text-stone-800"
                         : day.status === "pending"
                         ? "bg-amber-100 text-amber-900"
+                        : day.isCheckOut
+                        ? "bg-amber-100 text-amber-900 border border-amber-300"
                         : "bg-emerald-50 text-emerald-700"
                     }`}
                   >
@@ -301,9 +329,22 @@ export default function CalendarGrid({
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-[#1C1917]">
-                      {day.date} {day.isToday && "(Today)"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold text-[#1C1917]">
+                        {day.date} {day.isToday && "(Today)"}
+                      </p>
+                      {day.isCheckIn && (
+                        <span className="text-[9px] font-bold bg-[#C88A4B] text-white px-1.5 py-0.2 rounded">
+                          Check-in
+                        </span>
+                      )}
+                      {day.isCheckOut && (
+                        <span className="text-[9px] font-bold bg-amber-200 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded">
+                          Check-out
+                        </span>
+                      )}
+                    </div>
+
                     {day.status === "booked" && (
                       <p className="text-[11px] text-[#78716C]">
                         Booked &bull; {day.bookingDetails?.guestName} (
@@ -320,7 +361,12 @@ export default function CalendarGrid({
                         Pending Hold &bull; {day.bookingDetails?.guestName}
                       </p>
                     )}
-                    {day.status === "available" && (
+                    {day.status === "available" && day.isCheckOut && day.bookingDetails && (
+                      <p className="text-[11px] text-amber-800 font-medium">
+                        Morning Departure: {day.bookingDetails?.guestName} ({day.bookingDetails?.bookingRef}) &bull; Afternoon Available
+                      </p>
+                    )}
+                    {day.status === "available" && !day.isCheckOut && (
                       <p className="text-[11px] text-emerald-600">
                         Open for reservation
                       </p>
@@ -336,10 +382,12 @@ export default function CalendarGrid({
                       ? "bg-stone-200 text-stone-800"
                       : day.status === "pending"
                       ? "bg-amber-100 text-amber-900"
+                      : day.isCheckOut
+                      ? "bg-amber-100 text-amber-900 border border-amber-300"
                       : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   }`}
                 >
-                  {day.status}
+                  {day.isCheckOut && day.status === "available" ? "Departure Day" : day.status}
                 </span>
               </div>
             ))}

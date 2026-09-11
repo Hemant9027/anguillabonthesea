@@ -18,6 +18,7 @@ import InquiryFilters from "./components/InquiryFilters";
 import InquiryTable from "./components/InquiryTable";
 import InquiryDetailDrawer from "./components/InquiryDetailDrawer";
 import DeleteInquiryModal from "./components/DeleteInquiryModal";
+import RejectInquiryModal from "./components/RejectInquiryModal";
 
 export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState<CustomerInquiry[]>([]);
@@ -34,6 +35,7 @@ export default function AdminInquiriesPage() {
   // Drawer & Modal states
   const [selectedInquiry, setSelectedInquiry] = useState<CustomerInquiry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CustomerInquiry | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<CustomerInquiry | null>(null);
 
   // Toasts
   const [toast, setToast] = useState<{
@@ -183,6 +185,49 @@ export default function AdminInquiriesPage() {
     await fetchInquiries();
   };
 
+  // Confirm inquiry booking & block dates
+  const handleConfirmBooking = async (inquiry: CustomerInquiry) => {
+    try {
+      const res = await fetch(`/api/admin/inquiries/${inquiry._id}/confirm`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to confirm booking.");
+      }
+
+      showToast(
+        `Booking confirmed (#${data.data?.booking?.bookingRef || "NEW"})! Dates are now locked on the calendar.`
+      );
+      await fetchInquiries();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error confirming booking", "error");
+      throw err;
+    }
+  };
+
+  // Reject inquiry with reason
+  const handleRejectInquiry = async (id: string, reason: string) => {
+    try {
+      const res = await fetch(`/api/admin/inquiries/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to reject inquiry.");
+      }
+
+      showToast("Inquiry rejected. Dates remain open on calendar.");
+      setRejectTarget(null);
+      await fetchInquiries();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error rejecting inquiry", "error");
+      throw err;
+    }
+  };
+
   // Reset filters
   const handleResetFilters = () => {
     setSearch("");
@@ -218,19 +263,13 @@ export default function AdminInquiriesPage() {
           <div className="flex items-center gap-2 text-xs text-[#78716C] mb-1">
             <span>Admin</span>
             <span>/</span>
-            <span className="text-[#C88A4B] font-semibold">Inquiries</span>
+            <span className="text-[#C88A4B] font-medium">Customer Inquiries</span>
           </div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1917]">
-              Customer Inquiries
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#F4EFE9] text-[#C88A4B] border border-[#E7E5E4]">
-              Leads & Concierge
-            </span>
-          </div>
-          <p className="text-sm text-[#78716C] mt-1 max-w-2xl">
-            Review client requests, stay dates, guest contact details, follow-up
-            statuses, and private team notes.
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1917]">
+            Guest Inquiries & Leads
+          </h1>
+          <p className="text-xs text-[#78716C] mt-1">
+            Manage customer leads, review requested dates with real-time calendar checks, and confirm or reject reservations.
           </p>
         </div>
 
@@ -238,18 +277,16 @@ export default function AdminInquiriesPage() {
           <button
             onClick={() => fetchInquiries()}
             disabled={isLoading}
-            className="px-3.5 py-2.5 rounded-xl border border-[#E7E5E4] bg-white text-stone-700 text-xs font-bold hover:bg-[#F4EFE9] transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+            className="p-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:text-stone-900 hover:bg-[#F4EFE9] transition-colors shadow-2xs cursor-pointer"
+            title="Refresh list"
           >
-            <ArrowPathIcon
-              className={`w-4 h-4 text-[#C88A4B] ${isLoading ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* Top Metrics Cards */}
-      <InquiryStatsCards stats={stats} isLoading={isLoading && inquiries.length === 0} />
+      <InquiryStatsCards stats={stats} />
 
       {/* Search & Filter Controls */}
       <InquiryFilters
@@ -291,6 +328,8 @@ export default function AdminInquiriesPage() {
         onToggleRead={handleToggleRead}
         onAddNote={handleAddNote}
         onDelete={(inq) => setDeleteTarget(inq)}
+        onConfirmBooking={handleConfirmBooking}
+        onRequestReject={(inq) => setRejectTarget(inq)}
       />
 
       {/* Delete / Archive Confirmation Modal */}
@@ -300,6 +339,14 @@ export default function AdminInquiriesPage() {
         inquiry={deleteTarget}
         onArchive={handleArchive}
         onPermanentDelete={handlePermanentDelete}
+      />
+
+      {/* Reject Inquiry Modal with Reason */}
+      <RejectInquiryModal
+        isOpen={!!rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        inquiry={rejectTarget}
+        onReject={handleRejectInquiry}
       />
     </div>
   );

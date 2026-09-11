@@ -41,6 +41,8 @@ export default function InquiryFilters({
   const statusTabs: { key: InquiryStatus | "all"; label: string; count?: number }[] = [
     { key: "all", label: "All Active", count: (stats?.total ?? 0) - (stats?.archivedCount ?? 0) },
     { key: "new", label: "New", count: stats?.newCount ?? 0 },
+    { key: "confirmed", label: "Confirmed", count: stats?.confirmedCount ?? 0 },
+    { key: "rejected", label: "Rejected", count: stats?.rejectedCount ?? 0 },
     { key: "contacted", label: "Contacted", count: stats?.contactedCount ?? 0 },
     { key: "in_progress", label: "In Progress", count: stats?.inProgressCount ?? 0 },
     { key: "resolved", label: "Resolved", count: stats?.resolvedCount ?? 0 },

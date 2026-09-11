@@ -6,6 +6,10 @@ import type { Metadata } from 'next';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import GalleryClient from '../../components/GalleryClient';
+import { listGalleryItems } from '@/lib/db/services/galleryService';
+import { GALLERY_SECTIONS } from '@/lib/types/gallery';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Gallery — B on the Sea',
@@ -70,13 +74,10 @@ function readImagesFromDirectory(directory: string, publicPrefix: string): strin
     .sort(sortFiles);
 }
 
-function readGallerySections(): Section[] {
+function readGallerySectionsFromDisk(): Section[] {
   const base = path.join(process.cwd(), 'public', 'uploads');
   const sections: Section[] = [];
 
-  /*
-   * aboutvillab
-   */
   const aboutVillaDir = path.join(base, 'aboutvillab');
 
   if (fs.existsSync(aboutVillaDir)) {
@@ -100,7 +101,6 @@ function readGallerySections(): Section[] {
 
     for (const folder of folders) {
       const folderPath = path.join(aboutVillaDir, folder);
-
       const images = readImagesFromDirectory(
         folderPath,
         `/uploads/aboutvillab/${encodeURIComponent(folder)}`
@@ -116,13 +116,7 @@ function readGallerySections(): Section[] {
     }
   }
 
-  /*
-   * galleryphotos
-   *
-   * These images become the first "Villa" collection.
-   */
   const galleryPhotosDir = path.join(base, 'galleryphotos');
-
   const galleryPhotos = readImagesFromDirectory(galleryPhotosDir, '/uploads/galleryphotos');
 
   if (galleryPhotos.length > 0) {
@@ -136,8 +130,36 @@ function readGallerySections(): Section[] {
   return sections;
 }
 
+async function getLiveGallerySections(): Promise<Section[]> {
+  try {
+    const dbItems = await listGalleryItems({ status: 'active' });
+    if (dbItems && dbItems.length > 0) {
+      const sections: Section[] = GALLERY_SECTIONS.map((conf) => {
+        const secImages = dbItems
+          .filter((item) => item.section === conf.key)
+          .sort((a, b) => a.order - b.order)
+          .map((item) => item.url);
+
+        return {
+          key: conf.key,
+          label: conf.label,
+          images: secImages,
+        };
+      }).filter((sec) => sec.images.length > 0);
+
+      if (sections.length > 0) {
+        return sections;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load gallery from DB, falling back to disk:', err);
+  }
+
+  return readGallerySectionsFromDisk();
+}
+
 function getHeroImage(sections: Section[]) {
-  const preferred = ['galleryphotos', '1', 'mainlevel', 'bedrooms'];
+  const preferred = ['villa_exterior', 'galleryphotos', '1', 'main_level', 'mainlevel', 'bedrooms'];
 
   for (const key of preferred) {
     const section = sections.find((item) => item.key === key);
@@ -150,8 +172,8 @@ function getHeroImage(sections: Section[]) {
   return sections[0]?.images[0] ?? null;
 }
 
-export default function GalleryPage() {
-  const sections = readGallerySections();
+export default async function GalleryPage() {
+  const sections = await getLiveGallerySections();
   const hero = getHeroImage(sections);
 
   return (
@@ -164,3 +186,4 @@ export default function GalleryPage() {
     </>
   );
 }
+

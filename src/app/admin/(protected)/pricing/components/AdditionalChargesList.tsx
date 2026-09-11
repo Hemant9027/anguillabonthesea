@@ -7,7 +7,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { AdditionalCharge, ChargeType } from "@/lib/types/pricing";
+import { AdditionalCharge } from "@/lib/types/pricing";
 
 interface AdditionalChargesListProps {
   charges: AdditionalCharge[];
@@ -26,148 +26,163 @@ export default function AdditionalChargesList({
   onToggleActive,
   isLoading,
 }: AdditionalChargesListProps) {
-  const getChargeTypeBadge = (type: ChargeType, amount: number) => {
-    switch (type) {
-      case "percentage":
-        return {
-          label: `${amount}% of Subtotal`,
-          color: "bg-blue-50 text-blue-700 border-blue-200",
-        };
-      case "fixed":
-        return {
-          label: `$${amount} Flat Fee`,
-          color: "bg-purple-50 text-purple-700 border-purple-200",
-        };
-      case "per_night":
-        return {
-          label: `$${amount} / Night`,
-          color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        };
-      case "per_guest":
-        return {
-          label: `$${amount} / Guest`,
-          color: "bg-amber-50 text-amber-800 border-amber-200",
-        };
-      default:
-        return {
-          label: `$${amount}`,
-          color: "bg-stone-100 text-stone-700",
-        };
+  const formatRate = (charge: AdditionalCharge) => {
+    if (charge.type === "percentage") {
+      return `${charge.amount}%`;
     }
+    return `$${charge.amount}`;
   };
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-3xl border border-[#E7E5E4] p-6 shadow-sm animate-pulse space-y-4">
+      <div className="bg-white rounded-3xl border border-[#E7E5E4] p-6 sm:p-8 shadow-sm animate-pulse space-y-4">
         <div className="h-6 bg-[#F4EFE9] rounded w-1/4" />
-        <div className="h-20 bg-[#F4EFE9] rounded-2xl" />
+        <div className="h-32 bg-[#F4EFE9] rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-[#E7E5E4] p-6 sm:p-7 shadow-sm space-y-5">
+    <div className="bg-white rounded-3xl border border-[#E7E5E4] p-6 sm:p-8 shadow-sm space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F4EFE9]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F4EFE9]">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#C88A4B] block">
+          <h3 className="font-serif text-2xl md:text-3xl font-normal text-[#1C1917]">
             Taxes & Fees
-          </span>
-          <h3 className="font-serif text-lg font-bold text-[#1C1917]">
-            Additional Charges & Taxes
           </h3>
-          <p className="text-xs text-[#78716C]">
-            Mandatory island levies, cleaning fees, and service charges applied at checkout
+          <p className="text-sm text-[#78716C] mt-1">
+            Mandatory taxes and service fees applied to bookings.
           </p>
         </div>
 
         <button
           type="button"
           onClick={onAddCharge}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1C1917] hover:bg-[#2B2623] text-white text-xs font-semibold transition-all shadow-sm self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1C1917] hover:bg-[#2B2623] text-white text-xs font-semibold transition-all shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusIcon className="w-4 h-4 text-[#C88A4B]" />
-          <span>Add Charge</span>
+          <span>Add Fee / Tax</span>
         </button>
       </div>
 
-      {/* Grid of Charge Cards */}
+      {/* Main Table */}
       {charges.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {charges.map((charge) => {
-            const badge = getChargeTypeBadge(charge.type, charge.amount);
+        <div className="rounded-2xl border border-[#E7E5E4] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[550px]">
+              <thead>
+                <tr className="bg-[#FAF8F5] border-b border-[#E7E5E4] text-[11px] font-bold uppercase tracking-wider text-[#57534E]">
+                  <th className="py-4 px-6">Fee Type</th>
+                  <th className="py-4 px-6">Rate</th>
+                  <th className="py-4 px-6">Applied To</th>
+                  <th className="py-4 px-4 text-center">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E7E5E4] text-sm">
+                {charges.map((charge) => {
+                  const appliedToText =
+                    charge.appliedTo ||
+                    (charge.type === "percentage"
+                      ? "Applied to total rental"
+                      : charge.type === "per_night"
+                      ? "Per night"
+                      : "Applied once per stay");
 
-            return (
-              <div
-                key={charge._id}
-                className="p-4 rounded-2xl border border-[#E7E5E4] bg-[#FDFBF7] flex flex-col justify-between hover:border-[#C88A4B] transition-all space-y-3"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badge.color}`}
+                  return (
+                    <tr
+                      key={charge._id}
+                      className="hover:bg-[#FAF8F5] transition-colors"
                     >
-                      {badge.label}
-                    </span>
+                      {/* Fee Type */}
+                      <td className="py-4 px-6">
+                        <div className="font-semibold text-[#1C1917]">
+                          {charge.name}
+                        </div>
+                        {charge.description && (
+                          <div className="text-xs text-[#78716C] mt-0.5 max-w-sm">
+                            {charge.description}
+                          </div>
+                        )}
+                      </td>
 
-                    <button
-                      type="button"
-                      onClick={() => onToggleActive(charge)}
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition-all cursor-pointer ${
-                        charge.isActive
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-stone-200 text-stone-600"
-                      }`}
-                    >
-                      {charge.isActive ? "Active" : "Disabled"}
-                    </button>
-                  </div>
+                      {/* Rate */}
+                      <td className="py-4 px-6 font-bold text-[#1C1917]">
+                        {formatRate(charge)}
+                      </td>
 
-                  <h4 className="font-semibold text-sm text-[#1C1917]">
-                    {charge.name}
-                  </h4>
-                  {charge.description && (
-                    <p className="text-xs text-[#78716C] mt-0.5 leading-snug">
-                      {charge.description}
-                    </p>
-                  )}
-                </div>
+                      {/* Applied To */}
+                      <td className="py-4 px-6 text-[#57534E] text-sm font-normal">
+                        {appliedToText}
+                      </td>
 
-                <div className="pt-2 border-t border-[#E7E5E4] flex items-center justify-between text-xs">
-                  <span className="font-serif font-bold text-sm text-[#1C1917]">
-                    {charge.type === "percentage"
-                      ? `${charge.amount}%`
-                      : `$${charge.amount}`}
-                  </span>
+                      {/* Status Toggle */}
+                      <td className="py-4 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => onToggleActive(charge)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                            charge.isActive
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                              : "bg-stone-100 text-stone-500 border border-stone-200 hover:bg-stone-200"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              charge.isActive ? "bg-emerald-500" : "bg-stone-400"
+                            }`}
+                          />
+                          <span>{charge.isActive ? "Active" : "Disabled"}</span>
+                        </button>
+                      </td>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onEditCharge(charge)}
-                      className="p-1.5 rounded-lg text-[#78716C] hover:text-[#C88A4B] hover:bg-[#F4EFE9]"
-                      title="Edit Charge"
-                    >
-                      <PencilSquareIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteCharge(charge._id, charge.name)}
-                      className="p-1.5 rounded-lg text-[#78716C] hover:text-red-600 hover:bg-red-50"
-                      title="Delete Charge"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => onEditCharge(charge)}
+                            className="p-1.5 rounded-lg text-[#78716C] hover:text-[#C88A4B] hover:bg-[#F4EFE9] transition-colors cursor-pointer"
+                            title="Edit Charge"
+                          >
+                            <PencilSquareIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDeleteCharge(charge._id, charge.name)}
+                            className="p-1.5 rounded-lg text-[#78716C] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Delete Charge"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        <div className="py-8 px-4 rounded-2xl bg-[#FDFBF7] border border-dashed border-[#E7E5E4] text-center">
-          <p className="text-xs text-[#78716C]">
-            No additional charges or taxes configured yet.
+        <div className="py-10 px-4 rounded-2xl bg-[#FAF8F5] border border-dashed border-[#E7E5E4] text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#F4EFE9] text-[#78716C] flex items-center justify-center mb-3">
+            <TagIcon className="w-6 h-6 text-[#C88A4B]" />
+          </div>
+          <h4 className="font-serif text-base font-semibold text-[#1C1917] mb-1">
+            No taxes or fees configured
+          </h4>
+          <p className="text-xs text-[#78716C] max-w-sm mb-4 leading-relaxed">
+            Configure standard island tourism taxes and service charges.
           </p>
+          <button
+            type="button"
+            onClick={onAddCharge}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1C1917] hover:bg-[#2B2623] text-white text-xs font-semibold transition-all shadow-sm cursor-pointer"
+          >
+            <PlusIcon className="w-4 h-4 text-[#C88A4B]" />
+            <span>Add First Fee</span>
+          </button>
         </div>
       )}
     </div>

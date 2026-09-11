@@ -239,6 +239,38 @@ export default function DateDetailDrawer({
               </div>
             )}
 
+            {/* Case 3b: Departure Morning */}
+            {day.isCheckOut && day.bookingDetails && (
+              <div className="bg-amber-50/70 rounded-2xl border border-amber-200 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="w-5 h-5 text-amber-700" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-900">
+                      Departure Day (Morning Check-Out)
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-bold bg-amber-800 text-white px-2 py-0.5 rounded">
+                    {day.bookingDetails.bookingRef}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-amber-950">
+                  <div>
+                    <p className="text-amber-700">Departing Guest</p>
+                    <p className="font-bold text-sm text-[#1C1917]">
+                      {day.bookingDetails.guestName}
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-amber-800">
+                    Stay window was: {day.bookingDetails.checkIn} &rarr; {day.bookingDetails.checkOut}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 font-medium">
+                    &bull; Afternoon is open for new guest check-in
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Case 4: Available */}
             {day.status === "available" && (
               <div className="space-y-4">

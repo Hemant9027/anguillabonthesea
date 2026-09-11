@@ -26,8 +26,9 @@ export default function ChargeFormModal({
 }: ChargeFormModalProps) {
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
-  const [amount, setAmount] = useState(250);
-  const [type, setType] = useState<ChargeType>("fixed");
+  const [amount, setAmount] = useState(10);
+  const [type, setType] = useState<ChargeType>("percentage");
+  const [appliedTo, setAppliedTo] = useState("Applied to total rental");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
 
@@ -43,12 +44,14 @@ export default function ChargeFormModal({
       setName(editingCharge.name);
       setAmount(editingCharge.amount);
       setType(editingCharge.type);
+      setAppliedTo(editingCharge.appliedTo || (editingCharge.type === "percentage" ? "Applied to total rental" : "Fixed standard fee"));
       setDescription(editingCharge.description || "");
       setIsActive(editingCharge.isActive);
     } else {
       setName("");
-      setAmount(250);
-      setType("fixed");
+      setAmount(10);
+      setType("percentage");
+      setAppliedTo("Applied to total rental");
       setDescription("");
       setIsActive(true);
     }
@@ -80,6 +83,7 @@ export default function ChargeFormModal({
         name: name.trim(),
         amount: Number(amount),
         type,
+        appliedTo: appliedTo.trim() || (type === "percentage" ? "Applied to total rental" : "Fixed fee"),
         description: description.trim() || undefined,
         isActive,
       });
@@ -105,12 +109,12 @@ export default function ChargeFormModal({
             </div>
             <div>
               <h3 className="font-serif text-lg font-bold text-[#1C1917]">
-                {editingCharge ? "Edit Charge / Fee" : "Add Additional Charge"}
+                {editingCharge ? "Edit Fee / Tax" : "Add Fee / Tax"}
               </h3>
               <p className="text-xs text-[#78716C]">
                 {editingCharge
                   ? `Modifying ${editingCharge.name}`
-                  : "Configure automatic taxes, cleaning, or per-guest surcharges"}
+                  : "Configure Government Tax, Service Fee, or island levies"}
               </p>
             </div>
           </div>
@@ -135,13 +139,13 @@ export default function ChargeFormModal({
           {/* Charge Name */}
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1.5">
-              Charge Name <span className="text-rose-500">*</span>
+              Fee / Tax Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Deep Cleaning Fee, Tourism Levy"
+              placeholder="e.g. Government Tax, Service Fee"
               required
               className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
             />
@@ -158,8 +162,8 @@ export default function ChargeFormModal({
                 onChange={(e) => setType(e.target.value as ChargeType)}
                 className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all cursor-pointer"
               >
-                <option value="fixed">Fixed (Flat Amount)</option>
                 <option value="percentage">Percentage of Stay (%)</option>
+                <option value="fixed">Fixed (Flat Amount)</option>
                 <option value="per_night">Per Night ($ / night)</option>
                 <option value="per_guest">Per Guest ($ / person)</option>
               </select>
@@ -167,7 +171,7 @@ export default function ChargeFormModal({
 
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1.5">
-                Amount ({type === "percentage" ? "%" : "USD"}{" "}) <span className="text-rose-500">*</span>
+                Rate / Amount ({type === "percentage" ? "%" : "USD"}{" "}) <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 font-serif font-bold text-xs">
@@ -184,6 +188,20 @@ export default function ChargeFormModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Applied To Note */}
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+              Applied To Note
+            </label>
+            <input
+              type="text"
+              value={appliedTo}
+              onChange={(e) => setAppliedTo(e.target.value)}
+              placeholder="e.g. Applied to total rental"
+              className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-stone-50/50 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#C88A4B]/20 focus:border-[#C88A4B] transition-all"
+            />
           </div>
 
           {/* Type Helper Note */}

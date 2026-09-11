@@ -5,9 +5,27 @@ import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
 
 export default function Footer() {
-  const [year, setYear] = useState('2023');
+  const [year, setYear] = useState('2026');
+  const [settings, setSettings] = useState({
+    siteName: 'Villa B on the Sea',
+    contactEmail: 'anguillabonthesea@gmail.com',
+    contactPhone: '+1 508-633-7355',
+  });
+
   useEffect(() => {
     setYear(new Date().getFullYear().toString());
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          setSettings({
+            siteName: data.settings.siteName || 'Villa B on the Sea',
+            contactEmail: data.settings.contactEmail || 'anguillabonthesea@gmail.com',
+            contactPhone: data.settings.contactPhone || '+1 508-633-7355',
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -19,13 +37,13 @@ export default function Footer() {
               <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-white/10">
                 <img
                   src="/logo.png"
-                  alt="Villa B on the Sea"
+                  alt={settings.siteName}
                   className="h-8 w-auto object-contain"
                 />
               </div>
               <div className="max-w-xs">
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-                  Villa B on the Sea
+                  {settings.siteName}
                 </p>
                 <p className="mt-2 text-sm uppercase tracking-[0.35em] text-white/50">
                   Anguilla, Caribbean
@@ -38,7 +56,7 @@ export default function Footer() {
             </p>
             <div className="grid grid-cols-1 gap-3 max-w-sm">
               <a
-                href="tel:+15086337355"
+                href={`tel:${settings.contactPhone.replace(/[^+\d]/g, '')}`}
                 className="group flex min-w-0 items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 transition duration-300 hover:border-amber-200/25 hover:text-white"
               >
                 <Icon
@@ -46,10 +64,10 @@ export default function Footer() {
                   size={16}
                   className="text-amber-200 transition duration-300 group-hover:text-amber-100"
                 />
-                <span className="min-w-0 break-words">+1 508-633-7355</span>
+                <span className="min-w-0 break-words">{settings.contactPhone}</span>
               </a>
               <a
-                href="mailto:anguillabonthesea@gmail.com"
+                href={`mailto:${settings.contactEmail}`}
                 className="group flex min-w-0 items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 transition duration-300 hover:border-amber-200/25 hover:text-white"
               >
                 <Icon
@@ -57,10 +75,11 @@ export default function Footer() {
                   size={16}
                   className="text-amber-200 transition duration-300 group-hover:text-amber-100"
                 />
-                <span className="min-w-0 break-words leading-5">anguillabonthesea@gmail.com</span>
+                <span className="min-w-0 break-words leading-5">{settings.contactEmail}</span>
               </a>
             </div>
           </div>
+
 
           <div className="space-y-5">
             <p className="text-xs uppercase tracking-[0.35em] text-white/50">Quick Links</p>

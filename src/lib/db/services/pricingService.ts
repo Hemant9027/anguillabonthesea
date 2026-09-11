@@ -16,30 +16,98 @@ const DEFAULT_BASE_RATE: BaseRateConfig = {
   updatedAt: new Date().toISOString(),
 };
 
-const DEFAULT_CHARGES: Array<Omit<AdditionalCharge, "_id">> = [
+export const DEFAULT_SEASONS: Array<Omit<SeasonalRule, "_id">> = [
   {
-    name: "Government Tourism Levy",
-    amount: 13,
-    type: "percentage",
-    description: "Standard Anguilla island tourism tax",
+    name: "Low Season",
+    from: "May 1",
+    to: "Nov 14",
+    dateRange: "May 1 – Nov 14",
+    startDate: "05-01",
+    endDate: "11-14",
+    nightlyRate: 1200,
+    perNight: 1200,
+    weekendNight: 1400,
+    weekly: 7500,
+    monthly: 22000,
+    minStay: 3,
+    description: "Relaxing Caribbean summer and autumn getaway with gentle sea breezes",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
-    name: "Villa Staff Service Charge",
+    name: "Shoulder Season",
+    from: "Nov 15",
+    to: "Dec 14",
+    dateRange: "Nov 15 – Dec 14",
+    startDate: "11-15",
+    endDate: "12-14",
+    nightlyRate: 1800,
+    perNight: 1800,
+    weekendNight: 2000,
+    weekly: 11500,
+    monthly: 30000,
+    minStay: 3,
+    description: "Pre-holiday early winter period with prime calm waters and dining",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    name: "Holiday Peak",
+    from: "Dec 15",
+    to: "Jan 5",
+    dateRange: "Dec 15 – Jan 5",
+    startDate: "12-15",
+    endDate: "01-05",
+    nightlyRate: 3500,
+    perNight: 3500,
+    weekendNight: 4000,
+    weekly: 22000,
+    monthly: null,
+    minStay: 7,
+    description: "Festive Christmas & New Year celebrations in luxury oceanfront comfort",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    name: "High Season",
+    from: "Jan 6",
+    to: "Apr 30",
+    dateRange: "Jan 6 – Apr 30",
+    startDate: "01-06",
+    endDate: "04-30",
+    nightlyRate: 2500,
+    perNight: 2500,
+    weekendNight: 2800,
+    weekly: 16000,
+    monthly: 42000,
+    minStay: 4,
+    description: "Peak Caribbean winter and spring sunshine, tranquil trade winds",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+export const DEFAULT_CHARGES: Array<Omit<AdditionalCharge, "_id">> = [
+  {
+    name: "Government Tax",
     amount: 10,
     type: "percentage",
-    description: "Villa concierge and butler service gratuity",
+    appliedTo: "Applied to total rental",
+    description: "Anguilla island accommodation tax",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
-    name: "Departure Cleaning Fee",
-    amount: 450,
-    type: "fixed",
-    description: "Deep sanitized departure cleaning",
+    name: "Service Fee",
+    amount: 10,
+    type: "percentage",
+    appliedTo: "Applied to total rental",
+    description: "Villa staff service charge & dedicated concierge",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -121,24 +189,41 @@ export async function checkSeasonConflict(
 
 export async function listSeasonalRules(): Promise<SeasonalRule[]> {
   const db = await getDatabase();
+  const count = await db.collection("pricing_seasons").countDocuments();
+
+  if (count === 0) {
+    // Seed initial villa seasonal rate defaults
+    await db.collection("pricing_seasons").insertMany(DEFAULT_SEASONS as any);
+  }
+
   const docs = await db
     .collection("pricing_seasons")
     .find({})
-    .sort({ startDate: 1 })
+    .sort({ startDate: 1, createdAt: 1 })
     .toArray();
 
-  return docs.map((doc) => ({
-    _id: doc._id.toString(),
-    name: doc.name,
-    startDate: doc.startDate,
-    endDate: doc.endDate,
-    nightlyRate: Number(doc.nightlyRate),
-    minStay: Number(doc.minStay),
-    description: doc.description || "",
-    isActive: doc.isActive !== false,
-    createdAt: doc.createdAt || new Date().toISOString(),
-    updatedAt: doc.updatedAt || new Date().toISOString(),
-  }));
+  return docs.map((doc) => {
+    const nightly = Number(doc.perNight ?? doc.nightlyRate ?? 0);
+    return {
+      _id: doc._id.toString(),
+      name: doc.name,
+      startDate: doc.startDate || "",
+      endDate: doc.endDate || "",
+      from: doc.from || "",
+      to: doc.to || "",
+      dateRange: doc.dateRange || (doc.from && doc.to ? `${doc.from} – ${doc.to}` : ""),
+      nightlyRate: nightly,
+      perNight: nightly,
+      weekendNight: doc.weekendNight !== undefined && doc.weekendNight !== null ? Number(doc.weekendNight) : undefined,
+      weekly: doc.weekly !== undefined && doc.weekly !== null ? Number(doc.weekly) : undefined,
+      monthly: doc.monthly !== undefined && doc.monthly !== null ? Number(doc.monthly) : null,
+      minStay: Number(doc.minStay || 3),
+      description: doc.description || "",
+      isActive: doc.isActive !== false,
+      createdAt: doc.createdAt || new Date().toISOString(),
+      updatedAt: doc.updatedAt || new Date().toISOString(),
+    };
+  });
 }
 
 export async function createSeasonalRule(
@@ -146,19 +231,23 @@ export async function createSeasonalRule(
 ): Promise<SeasonalRule> {
   const db = await getDatabase();
 
-  if (dto.endDate <= dto.startDate) {
+  const startDate = dto.startDate || "";
+  const endDate = dto.endDate || "";
+
+  if (startDate && endDate && endDate <= startDate) {
     throw new Error("Season end date must be strictly after start date.");
   }
 
-  if (dto.nightlyRate < 0) {
+  const effectiveNightly = Number(dto.perNight ?? dto.nightlyRate ?? 0);
+  if (effectiveNightly < 0) {
     throw new Error("Nightly rate cannot be negative.");
   }
 
-  // Conflict check if active
-  if (dto.isActive !== false) {
+  // Conflict check if active and full dates are supplied
+  if (dto.isActive !== false && startDate && endDate && startDate.length === 10 && endDate.length === 10) {
     const { hasConflict, conflictingSeason } = await checkSeasonConflict(
-      dto.startDate,
-      dto.endDate
+      startDate,
+      endDate
     );
     if (hasConflict) {
       throw new Error(
@@ -168,11 +257,28 @@ export async function createSeasonalRule(
   }
 
   const now = new Date().toISOString();
+  const fromStr = dto.from ? dto.from.trim() : "";
+  const toStr = dto.to ? dto.to.trim() : "";
+  const dateRangeStr = dto.dateRange
+    ? dto.dateRange.trim()
+    : fromStr && toStr
+    ? `${fromStr} – ${toStr}`
+    : startDate && endDate
+    ? `${startDate} – ${endDate}`
+    : "";
+
   const newDoc = {
     name: dto.name.trim(),
-    startDate: dto.startDate,
-    endDate: dto.endDate,
-    nightlyRate: Number(dto.nightlyRate),
+    startDate,
+    endDate,
+    from: fromStr,
+    to: toStr,
+    dateRange: dateRangeStr,
+    nightlyRate: effectiveNightly,
+    perNight: effectiveNightly,
+    weekendNight: dto.weekendNight !== undefined && dto.weekendNight !== null ? Number(dto.weekendNight) : undefined,
+    weekly: dto.weekly !== undefined && dto.weekly !== null ? Number(dto.weekly) : undefined,
+    monthly: dto.monthly !== undefined && dto.monthly !== null ? Number(dto.monthly) : null,
     minStay: Math.max(1, Number(dto.minStay) || 3),
     description: dto.description ? dto.description.trim() : "",
     isActive: dto.isActive !== false,
@@ -200,16 +306,16 @@ export async function updateSeasonalRule(
     .findOne({ _id: new ObjectId(id) });
   if (!existing) return null;
 
-  const targetStart = dto.startDate || existing.startDate;
-  const targetEnd = dto.endDate || existing.endDate;
+  const targetStart = dto.startDate !== undefined ? dto.startDate : existing.startDate;
+  const targetEnd = dto.endDate !== undefined ? dto.endDate : existing.endDate;
   const targetActive = dto.isActive !== undefined ? dto.isActive : existing.isActive;
 
-  if (targetEnd <= targetStart) {
+  if (targetStart && targetEnd && targetEnd <= targetStart) {
     throw new Error("Season end date must be strictly after start date.");
   }
 
-  // Collision check if target status is active
-  if (targetActive) {
+  // Collision check if target status is active and dates are full YYYY-MM-DD
+  if (targetActive && targetStart && targetEnd && targetStart.length === 10 && targetEnd.length === 10) {
     const { hasConflict, conflictingSeason } = await checkSeasonConflict(
       targetStart,
       targetEnd,
@@ -230,10 +336,33 @@ export async function updateSeasonalRule(
   if (dto.name !== undefined) updateFields.name = dto.name.trim();
   if (dto.startDate !== undefined) updateFields.startDate = dto.startDate;
   if (dto.endDate !== undefined) updateFields.endDate = dto.endDate;
-  if (dto.nightlyRate !== undefined) updateFields.nightlyRate = Math.max(0, Number(dto.nightlyRate));
+  if (dto.from !== undefined) updateFields.from = dto.from.trim();
+  if (dto.to !== undefined) updateFields.to = dto.to.trim();
+  if (dto.dateRange !== undefined) updateFields.dateRange = dto.dateRange.trim();
+  if (dto.perNight !== undefined || dto.nightlyRate !== undefined) {
+    const rate = Math.max(0, Number(dto.perNight ?? dto.nightlyRate));
+    updateFields.nightlyRate = rate;
+    updateFields.perNight = rate;
+  }
+  if (dto.weekendNight !== undefined) {
+    updateFields.weekendNight = dto.weekendNight === null ? null : Math.max(0, Number(dto.weekendNight));
+  }
+  if (dto.weekly !== undefined) {
+    updateFields.weekly = dto.weekly === null ? null : Math.max(0, Number(dto.weekly));
+  }
+  if (dto.monthly !== undefined) {
+    updateFields.monthly = dto.monthly === null ? null : Math.max(0, Number(dto.monthly));
+  }
   if (dto.minStay !== undefined) updateFields.minStay = Math.max(1, Number(dto.minStay));
   if (dto.description !== undefined) updateFields.description = dto.description.trim();
   if (dto.isActive !== undefined) updateFields.isActive = dto.isActive;
+
+  // Auto-format dateRange if from/to provided
+  if (dto.from !== undefined || dto.to !== undefined) {
+    const f = dto.from !== undefined ? dto.from : existing.from;
+    const t = dto.to !== undefined ? dto.to : existing.to;
+    if (f && t) updateFields.dateRange = `${f} – ${t}`;
+  }
 
   await db
     .collection("pricing_seasons")
@@ -244,13 +373,21 @@ export async function updateSeasonalRule(
     .findOne({ _id: new ObjectId(id) });
   if (!updated) return null;
 
+  const nightly = Number(updated.perNight ?? updated.nightlyRate ?? 0);
   return {
     _id: updated._id.toString(),
     name: updated.name,
-    startDate: updated.startDate,
-    endDate: updated.endDate,
-    nightlyRate: Number(updated.nightlyRate),
-    minStay: Number(updated.minStay),
+    startDate: updated.startDate || "",
+    endDate: updated.endDate || "",
+    from: updated.from || "",
+    to: updated.to || "",
+    dateRange: updated.dateRange || (updated.from && updated.to ? `${updated.from} – ${updated.to}` : ""),
+    nightlyRate: nightly,
+    perNight: nightly,
+    weekendNight: updated.weekendNight !== undefined && updated.weekendNight !== null ? Number(updated.weekendNight) : undefined,
+    weekly: updated.weekly !== undefined && updated.weekly !== null ? Number(updated.weekly) : undefined,
+    monthly: updated.monthly !== undefined && updated.monthly !== null ? Number(updated.monthly) : null,
+    minStay: Number(updated.minStay || 3),
     description: updated.description || "",
     isActive: updated.isActive,
     createdAt: updated.createdAt,
@@ -289,6 +426,7 @@ export async function listAdditionalCharges(): Promise<AdditionalCharge[]> {
     name: doc.name,
     amount: Number(doc.amount),
     type: doc.type,
+    appliedTo: doc.appliedTo || (doc.type === "percentage" ? "Applied to total rental" : "Fixed standard charge"),
     description: doc.description || "",
     isActive: doc.isActive !== false,
     createdAt: doc.createdAt || new Date().toISOString(),
@@ -314,6 +452,7 @@ export async function createAdditionalCharge(
     name: dto.name.trim(),
     amount: Number(dto.amount),
     type: dto.type,
+    appliedTo: dto.appliedTo ? dto.appliedTo.trim() : (dto.type === "percentage" ? "Applied to total rental" : "Fixed standard charge"),
     description: dto.description ? dto.description.trim() : "",
     isActive: dto.isActive !== false,
     createdAt: now,
@@ -343,6 +482,7 @@ export async function updateAdditionalCharge(
   if (dto.name !== undefined) updateFields.name = dto.name.trim();
   if (dto.amount !== undefined) updateFields.amount = Math.max(0, Number(dto.amount));
   if (dto.type !== undefined) updateFields.type = dto.type;
+  if (dto.appliedTo !== undefined) updateFields.appliedTo = dto.appliedTo.trim();
   if (dto.description !== undefined) updateFields.description = dto.description.trim();
   if (dto.isActive !== undefined) updateFields.isActive = dto.isActive;
 
@@ -360,6 +500,7 @@ export async function updateAdditionalCharge(
     name: updated.name,
     amount: Number(updated.amount),
     type: updated.type,
+    appliedTo: updated.appliedTo || (updated.type === "percentage" ? "Applied to total rental" : "Fixed standard charge"),
     description: updated.description || "",
     isActive: updated.isActive,
     createdAt: updated.createdAt,

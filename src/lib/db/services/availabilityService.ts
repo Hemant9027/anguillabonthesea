@@ -89,14 +89,22 @@ export async function getMonthAvailability(
   }
 
   // Create date lookup maps
-  // Date -> booking
-  const bookingDateMap = new Map<string, any>();
+  // Occupied nights map: Date -> booking
+  const stayMap = new Map<string, any>();
+  // Check-in arrivals: Date -> booking
+  const checkInMap = new Map<string, any>();
+  // Check-out departures: Date -> booking
+  const checkOutMap = new Map<string, any>();
+
   bookings.forEach((b) => {
+    if (!b.checkIn || !b.checkOut || b.checkIn >= b.checkOut) return;
+    checkInMap.set(b.checkIn, b);
+    checkOutMap.set(b.checkOut, b);
     const start = parseDateStr(b.checkIn);
     const end = parseDateStr(b.checkOut);
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const dStr = formatDateStr(d);
-      bookingDateMap.set(dStr, b);
+      stayMap.set(dStr, b);
     }
   });
 
@@ -127,26 +135,27 @@ export async function getMonthAvailability(
     const isCurrentMonth = curr.getMonth() === month - 1;
     const isToday = dStr === todayStr;
 
+    const matchedStay = stayMap.get(dStr);
+    const matchedCheckIn = checkInMap.get(dStr);
+    const matchedCheckOut = checkOutMap.get(dStr);
+    const matchedBlock = blockDateMap.get(dStr);
+
+    const isCheckIn = !!matchedCheckIn;
+    const isCheckOut = !!matchedCheckOut;
+
     let status: "available" | "booked" | "blocked" | "pending" = "available";
     let bookingDetails = undefined;
     let blockDetails = undefined;
 
-    const matchedBooking = bookingDateMap.get(dStr);
-    const matchedBlock = blockDateMap.get(dStr);
-
-    if (matchedBooking) {
-      if (matchedBooking.status === "pending") {
-        status = "pending";
-      } else {
-        status = "booked";
-      }
+    if (matchedStay) {
+      status = matchedStay.status === "pending" ? "pending" : "booked";
       bookingDetails = {
-        id: matchedBooking._id.toString(),
-        bookingRef: matchedBooking.bookingRef || "REF",
-        guestName: matchedBooking.guestName,
-        checkIn: matchedBooking.checkIn,
-        checkOut: matchedBooking.checkOut,
-        status: matchedBooking.status,
+        id: matchedStay._id.toString(),
+        bookingRef: matchedStay.bookingRef || "REF",
+        guestName: matchedStay.guestName,
+        checkIn: matchedStay.checkIn,
+        checkOut: matchedStay.checkOut,
+        status: matchedStay.status,
       };
     } else if (matchedBlock) {
       status = "blocked";
@@ -156,6 +165,17 @@ export async function getMonthAvailability(
         notes: matchedBlock.notes,
         startDate: matchedBlock.startDate,
         endDate: matchedBlock.endDate,
+      };
+    } else if (matchedCheckOut) {
+      // Check-out morning (available for next guest check-in that afternoon)
+      status = "available";
+      bookingDetails = {
+        id: matchedCheckOut._id.toString(),
+        bookingRef: matchedCheckOut.bookingRef || "REF",
+        guestName: matchedCheckOut.guestName,
+        checkIn: matchedCheckOut.checkIn,
+        checkOut: matchedCheckOut.checkOut,
+        status: matchedCheckOut.status,
       };
     }
 
@@ -172,6 +192,8 @@ export async function getMonthAvailability(
       isCurrentMonth,
       isToday,
       status,
+      isCheckIn,
+      isCheckOut,
       bookingDetails,
       blockDetails,
     });

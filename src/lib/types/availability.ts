@@ -25,6 +25,8 @@ export interface CalendarDay {
   isCurrentMonth: boolean;
   isToday: boolean;
   status: DateStatus;
+  isCheckIn?: boolean;
+  isCheckOut?: boolean;
   bookingDetails?: {
     id: string;
     bookingRef: string;

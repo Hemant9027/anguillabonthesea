@@ -2,6 +2,8 @@ export type InquiryStatus =
   | "new"
   | "contacted"
   | "in_progress"
+  | "confirmed"
+  | "rejected"
   | "resolved"
   | "archived";
 
@@ -10,6 +12,14 @@ export interface InquiryNote {
   content: string;
   author: string;
   createdAt: string;
+}
+
+export interface InquiryAvailability {
+  isAvailable: boolean;
+  hasConflict: boolean;
+  conflictReason?: string;
+  conflictType?: "booking" | "block";
+  conflictRef?: string;
 }
 
 export interface CustomerInquiry {
@@ -25,6 +35,10 @@ export interface CustomerInquiry {
   status: InquiryStatus;
   isRead: boolean;
   notes: InquiryNote[];
+  availability?: InquiryAvailability;
+  bookingId?: string;
+  bookingRef?: string;
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +58,7 @@ export interface UpdateInquiryDto {
   status?: InquiryStatus;
   isRead?: boolean;
   addNote?: string;
+  rejectionReason?: string;
 }
 
 export interface InquiryFilterOptions {
@@ -60,6 +75,8 @@ export interface InquiryStats {
   newCount: number;
   contactedCount: number;
   inProgressCount: number;
+  confirmedCount: number;
+  rejectedCount: number;
   resolvedCount: number;
   archivedCount: number;
 }

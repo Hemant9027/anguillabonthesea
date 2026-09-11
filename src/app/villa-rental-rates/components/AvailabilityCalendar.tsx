@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/AppIcon";
 
 const MONTHS = [
@@ -19,18 +19,14 @@ const MONTHS = [
 ];
 const DAYS_OF_WEEK = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-type DayStatus = "available" | "booked" | "arrival" | "departure" | null;
-
-const mockBookings: Record<string, DayStatus> = {
-  "2026-08-10": "arrival",
-  "2026-08-11": "booked",
-  "2026-08-12": "booked",
-  "2026-08-13": "booked",
-  "2026-08-17": "departure",
-  "2026-08-22": "arrival",
-  "2026-08-23": "booked",
-  "2026-08-24": "booked",
-  "2026-08-25": "departure",
+type DayInfo = {
+  date: string;
+  dayOfMonth: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  status: "available" | "booked" | "blocked" | "pending";
+  isCheckIn?: boolean;
+  isCheckOut?: boolean;
 };
 
 function getDaysInMonth(year: number, month: number) {
@@ -44,6 +40,33 @@ export default function AvailabilityCalendar() {
   const today = new Date();
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [daysData, setDaysData] = useState<Record<string, DayInfo>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchAvailability = useCallback(async (year: number, month: number) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/availability?year=${year}&month=${month + 1}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.days)) {
+        const map: Record<string, DayInfo> = {};
+        json.days.forEach((d: DayInfo) => {
+          map[d.date] = d;
+        });
+        setDaysData(map);
+      }
+    } catch (err) {
+      console.error("Failed to load live availability:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailability(calYear, calMonth);
+  }, [calYear, calMonth, fetchAvailability]);
 
   const daysInMonth = getDaysInMonth(calYear, calMonth);
   const firstDay = getFirstDayOfMonth(calYear, calMonth);
@@ -61,9 +84,9 @@ export default function AvailabilityCalendar() {
     } else setCalMonth((m) => m + 1);
   };
 
-  const getDayStatus = (day: number): DayStatus => {
+  const getDayInfo = (day: number): DayInfo | undefined => {
     const key = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return mockBookings[key] ?? null;
+    return daysData[key];
   };
 
   return (
@@ -72,9 +95,16 @@ export default function AvailabilityCalendar() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Calendar */}
           <div className="lg:col-span-7">
-            <h2 className="font-display text-2xl font-medium text-foreground mb-8">
-              Availability Calendar
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-display text-2xl font-medium text-foreground">
+                Availability Calendar
+              </h2>
+              {isLoading && (
+                <span className="text-xs text-muted-foreground animate-pulse">
+                  Updating live dates...
+                </span>
+              )}
+            </div>
             <div className="bg-card border border-border rounded-2xl overflow-hidden card-shadow">
               {/* Month Nav */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-border">
@@ -114,31 +144,41 @@ export default function AvailabilityCalendar() {
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="aspect-square border-r border-b border-border/50"
+                    className="aspect-square border-r border-b border-border/50 bg-muted/20"
                   />
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
-                  const status = getDayStatus(day);
+                  const dayInfo = getDayInfo(day);
+                  const isCheckIn = dayInfo?.isCheckIn;
+                  const isCheckOut = dayInfo?.isCheckOut;
+                  const status = dayInfo?.status || "available";
+                  const isBooked = status === "booked" || status === "pending";
+                  const isBlocked = status === "blocked";
                   const isToday =
                     day === today.getDate() &&
                     calMonth === today.getMonth() &&
                     calYear === today.getFullYear();
+
+                  let statusClasses = "cal-day-available hover:bg-muted cursor-pointer";
+                  if (isCheckIn) {
+                    statusClasses = "bg-primary/15 text-primary font-medium";
+                  } else if (isCheckOut) {
+                    statusClasses = "bg-accent/15 text-accent font-medium";
+                  } else if (isBooked || isBlocked) {
+                    statusClasses = "cal-day-booked text-muted-foreground cursor-not-allowed";
+                  }
+
                   return (
                     <div
                       key={day}
+                      title={`${MONTHS[calMonth]} ${day}, ${calYear}: ${isCheckIn ? "Check-in" : isCheckOut ? "Check-out" : isBooked ? "Booked" : isBlocked ? "Blocked" : "Available"}`}
                       className={`aspect-square flex items-center justify-center text-sm border-r border-b border-border/50 transition-colors relative
-                        ${status === "booked" ? "cal-day-booked" : ""}
-                        ${status === "available" ? "cal-day-available" : ""}
-                        ${status === "arrival" ? "bg-primary/15 text-primary" : ""}
-                        ${status === "departure" ? "bg-accent/15 text-accent" : ""}
-                        ${isToday ? "ring-2 ring-inset ring-primary" : ""}
-                        ${!status ? "hover:bg-muted cursor-pointer" : "cursor-default"}
+                        ${statusClasses}
+                        ${isToday ? "ring-2 ring-inset ring-primary font-bold" : ""}
                       `}
                     >
-                      <span
-                        className={`font-medium ${isToday ? "text-primary" : !status ? "text-foreground" : ""}`}
-                      >
+                      <span className={isToday ? "text-primary font-bold" : ""}>
                         {day}
                       </span>
                     </div>
@@ -212,3 +252,4 @@ export default function AvailabilityCalendar() {
     </section>
   );
 }
+

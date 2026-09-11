@@ -53,6 +53,16 @@ export default function InquiryTable({
           label: "Resolved",
           classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
         };
+      case "confirmed":
+        return {
+          label: "Confirmed",
+          classes: "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold",
+        };
+      case "rejected":
+        return {
+          label: "Rejected",
+          classes: "bg-rose-50 text-rose-700 border-rose-200 font-semibold",
+        };
       case "archived":
         return {
           label: "Archived",
@@ -165,19 +175,44 @@ export default function InquiryTable({
                   {/* Stay details */}
                   <td className="py-4 px-4 whitespace-nowrap">
                     {inq.checkIn && inq.checkOut ? (
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-stone-800 font-medium">
                           <CalendarDaysIcon className="w-3.5 h-3.5 text-[#C88A4B]" />
                           <span>
                             {inq.checkIn} → {inq.checkOut}
                           </span>
                         </div>
-                        {inq.guests && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
-                            <UserGroupIcon className="w-3.5 h-3.5" />
-                            <span>{inq.guests} Guests</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {inq.guests && (
+                            <span className="text-[11px] text-stone-500">
+                              {inq.guests} Guests
+                            </span>
+                          )}
+                          {inq.status === "confirmed" ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                              Dates Locked
+                            </span>
+                          ) : inq.availability ? (
+                            inq.availability.isAvailable ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                title="Dates are 100% free on calendar"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Available
+                              </span>
+                            ) : (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+                                title={inq.availability.conflictReason || "Dates conflict with an existing reservation"}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                Conflict: {inq.availability.conflictType === "block" ? "Blocked" : "Booked"}
+                              </span>
+                            )
+                          ) : null}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-stone-400 text-[11px]">General inquiry</span>
@@ -204,6 +239,8 @@ export default function InquiryTable({
                       <option value="new">New Lead</option>
                       <option value="contacted">Contacted</option>
                       <option value="in_progress">In Progress</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="rejected">Rejected</option>
                       <option value="resolved">Resolved</option>
                       <option value="archived">Archived</option>
                     </select>

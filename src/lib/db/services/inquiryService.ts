@@ -7,7 +7,14 @@ import {
   InquiryFilterOptions,
   InquiryStats,
   InquiryNote,
+  InquiryAvailability,
 } from "@/lib/types/inquiry";
+import { calculateStayQuote } from "@/lib/pricing/calculator";
+import {
+  getBaseRate,
+  listSeasonalRules,
+  listAdditionalCharges,
+} from "@/lib/db/services/pricingService";
 
 const COLLECTION_NAME = "inquiries";
 
@@ -158,6 +165,91 @@ export async function ensureSeedInquiries(): Promise<void> {
 }
 
 /**
+ * Checks in real time whether the requested dates overlap with an existing booking or blocked date.
+ */
+export async function checkInquiryAvailability(
+  checkIn: string,
+  checkOut: string
+): Promise<InquiryAvailability> {
+  if (checkIn >= checkOut) {
+    return {
+      isAvailable: false,
+      hasConflict: true,
+      conflictReason: "Check-out date must be strictly after check-in date",
+    };
+  }
+
+  const db = await getDatabase();
+
+  // 1. Check bookings collection (confirmed, completed, pending)
+  const conflictingBooking = await db.collection("bookings").findOne({
+    status: { $in: ["confirmed", "completed", "pending"] },
+    checkIn: { $lt: checkOut },
+    checkOut: { $gt: checkIn },
+  });
+
+  if (conflictingBooking) {
+    const ref = conflictingBooking.bookingRef || "Confirmed Booking";
+    return {
+      isAvailable: false,
+      hasConflict: true,
+      conflictType: "booking",
+      conflictRef: ref,
+      conflictReason: `Already booked (${conflictingBooking.checkIn} → ${conflictingBooking.checkOut}) for ${conflictingBooking.guestName || "Guest"}`,
+    };
+  }
+
+  // 2. Check blocked_dates collection
+  const conflictingBlock = await db.collection("blocked_dates").findOne({
+    startDate: { $lt: checkOut },
+    endDate: { $gt: checkIn },
+  });
+
+  if (conflictingBlock) {
+    const reason = conflictingBlock.reason || "Maintenance / Private hold";
+    return {
+      isAvailable: false,
+      hasConflict: true,
+      conflictType: "block",
+      conflictRef: reason,
+      conflictReason: `Dates blocked (${conflictingBlock.startDate} → ${conflictingBlock.endDate}): ${reason}`,
+    };
+  }
+
+  return {
+    isAvailable: true,
+    hasConflict: false,
+  };
+}
+
+/**
+ * Enriches an inquiry document with live availability status.
+ */
+export async function enrichInquiryWithAvailability(
+  doc: any
+): Promise<CustomerInquiry> {
+  let availability: InquiryAvailability | undefined = undefined;
+
+  if (doc.checkIn && doc.checkOut) {
+    if (doc.status === "confirmed") {
+      availability = {
+        isAvailable: false,
+        hasConflict: false,
+        conflictReason: "Booking Confirmed & Dates Locked",
+      };
+    } else {
+      availability = await checkInquiryAvailability(doc.checkIn, doc.checkOut);
+    }
+  }
+
+  return {
+    ...doc,
+    _id: doc._id.toString(),
+    availability,
+  } as CustomerInquiry;
+}
+
+/**
  * Lists inquiries matching search and filter options.
  */
 export async function listInquiries(
@@ -203,14 +295,11 @@ export async function listInquiries(
 
   const docs = await collection.find(query).sort({ createdAt: -1 }).toArray();
 
-  return docs.map((doc) => ({
-    ...doc,
-    _id: doc._id.toString(),
-  })) as CustomerInquiry[];
+  return Promise.all(docs.map((doc) => enrichInquiryWithAvailability(doc)));
 }
 
 /**
- * Retrieves a single inquiry by ID.
+ * Retrieves a single inquiry by ID with availability information.
  */
 export async function getInquiryById(
   id: string
@@ -221,10 +310,185 @@ export async function getInquiryById(
   const doc = await collection.findOne({ _id: new ObjectId(id) });
   if (!doc) return null;
 
+  return enrichInquiryWithAvailability(doc);
+}
+
+/**
+ * Confirms an inquiry, automatically creates a confirmed booking in MongoDB, and blocks the dates.
+ */
+export async function confirmInquiryBooking(
+  inquiryId: string,
+  adminAuthor = "admin"
+): Promise<{ success: boolean; booking: any; inquiry: CustomerInquiry; error?: string }> {
+  const collection = await getInquiryCollection();
+  if (!ObjectId.isValid(inquiryId)) {
+    return { success: false, booking: null, inquiry: null as any, error: "Invalid inquiry ID" };
+  }
+
+  const inquiry = await collection.findOne({ _id: new ObjectId(inquiryId) });
+  if (!inquiry) {
+    return { success: false, booking: null, inquiry: null as any, error: "Inquiry not found" };
+  }
+
+  if (!inquiry.checkIn || !inquiry.checkOut) {
+    return {
+      success: false,
+      booking: null,
+      inquiry: null as any,
+      error: "Inquiry does not have check-in and check-out dates specified",
+    };
+  }
+
+  // Check availability
+  const availability = await checkInquiryAvailability(inquiry.checkIn, inquiry.checkOut);
+  if (!availability.isAvailable) {
+    return {
+      success: false,
+      booking: null,
+      inquiry: null as any,
+      error: `Cannot confirm booking: ${availability.conflictReason || "Dates conflict with existing reservation"}`,
+    };
+  }
+
+  const db = await getDatabase();
+  const year = new Date().getFullYear();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let randomPart = "";
+  for (let i = 0; i < 4; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const bookingRef = `VB-${year}-${randomPart}`;
+
+  // Calculate nights
+  const start = new Date(inquiry.checkIn);
+  const end = new Date(inquiry.checkOut);
+  const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
+
+  // Calculate pricing amount
+  let amount = 0;
+  try {
+    const [baseRate, seasons, charges] = await Promise.all([
+      getBaseRate(),
+      listSeasonalRules(),
+      listAdditionalCharges(),
+    ]);
+    const quote = calculateStayQuote({
+      checkIn: inquiry.checkIn,
+      checkOut: inquiry.checkOut,
+      guests: inquiry.guests || 2,
+      baseRate,
+      seasons,
+      charges,
+    });
+    amount = quote.grandTotal;
+  } catch {
+    amount = nights * 1500;
+  }
+
+  const now = new Date().toISOString();
+  const newBooking = {
+    bookingRef,
+    guestName: inquiry.name,
+    email: inquiry.email,
+    phone: inquiry.phone || "+1 (508) 633-7355",
+    checkIn: inquiry.checkIn,
+    checkOut: inquiry.checkOut,
+    nights,
+    guests: inquiry.guests || 2,
+    accommodation: "Villa B on the Sea (Full Estate)",
+    amount,
+    paymentStatus: "pending" as const,
+    status: "confirmed" as const,
+    notes: `Booking confirmed from website inquiry #${inquiryId}. Guest message: "${inquiry.message}"`,
+    inquiryId: inquiryId,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const bookingResult = await db.collection("bookings").insertOne(newBooking);
+  const bookingId = bookingResult.insertedId.toString();
+
+  // Add confirmation note
+  const confirmNote: InquiryNote = {
+    id: `note_${Date.now()}_conf`,
+    content: `Booking Confirmed (#${bookingRef}) by ${adminAuthor}. Dates ${inquiry.checkIn} to ${inquiry.checkOut} are now locked on the calendar.`,
+    author: adminAuthor,
+    createdAt: now,
+  };
+
+  await collection.updateOne(
+    { _id: new ObjectId(inquiryId) },
+    {
+      $set: {
+        status: "confirmed",
+        bookingId,
+        bookingRef,
+        updatedAt: now,
+      },
+      $push: { notes: confirmNote },
+    }
+  );
+
+  await logActivity(
+    "BOOKING_CONFIRMED_FROM_INQUIRY",
+    `Confirmed booking #${bookingRef} for ${inquiry.name} (${inquiry.checkIn} to ${inquiry.checkOut})`
+  );
+
+  const updatedDoc = await collection.findOne({ _id: new ObjectId(inquiryId) });
+  const updatedInquiry = await enrichInquiryWithAvailability(updatedDoc);
+
   return {
-    ...doc,
-    _id: doc._id.toString(),
-  } as CustomerInquiry;
+    success: true,
+    booking: { ...newBooking, _id: bookingId },
+    inquiry: updatedInquiry,
+  };
+}
+
+/**
+ * Rejects an inquiry with a recorded reason without blocking any dates.
+ */
+export async function rejectInquiry(
+  inquiryId: string,
+  reason: string,
+  adminAuthor = "admin"
+): Promise<{ success: boolean; inquiry: CustomerInquiry; error?: string }> {
+  const collection = await getInquiryCollection();
+  if (!ObjectId.isValid(inquiryId)) {
+    return { success: false, inquiry: null as any, error: "Invalid inquiry ID" };
+  }
+
+  const now = new Date().toISOString();
+  const rejectNote: InquiryNote = {
+    id: `note_${Date.now()}_rej`,
+    content: `Inquiry Rejected by ${adminAuthor}. Reason: ${reason}`,
+    author: adminAuthor,
+    createdAt: now,
+  };
+
+  await collection.updateOne(
+    { _id: new ObjectId(inquiryId) },
+    {
+      $set: {
+        status: "rejected",
+        rejectionReason: reason,
+        updatedAt: now,
+      },
+      $push: { notes: rejectNote },
+    }
+  );
+
+  await logActivity(
+    "INQUIRY_REJECTED",
+    `Rejected inquiry #${inquiryId}. Reason: ${reason}`
+  );
+
+  const updatedDoc = await collection.findOne({ _id: new ObjectId(inquiryId) });
+  const updatedInquiry = await enrichInquiryWithAvailability(updatedDoc);
+
+  return {
+    success: true,
+    inquiry: updatedInquiry,
+  };
 }
 
 /**
@@ -361,6 +625,8 @@ export async function getInquiryStats(): Promise<InquiryStats> {
   let newCount = 0;
   let contactedCount = 0;
   let inProgressCount = 0;
+  let confirmedCount = 0;
+  let rejectedCount = 0;
   let resolvedCount = 0;
   let archivedCount = 0;
 
@@ -369,6 +635,8 @@ export async function getInquiryStats(): Promise<InquiryStats> {
     if (item.status === "new") newCount++;
     if (item.status === "contacted") contactedCount++;
     if (item.status === "in_progress") inProgressCount++;
+    if (item.status === "confirmed") confirmedCount++;
+    if (item.status === "rejected") rejectedCount++;
     if (item.status === "resolved") resolvedCount++;
     if (item.status === "archived") archivedCount++;
   }
@@ -379,6 +647,8 @@ export async function getInquiryStats(): Promise<InquiryStats> {
     newCount,
     contactedCount,
     inProgressCount,
+    confirmedCount,
+    rejectedCount,
     resolvedCount,
     archivedCount,
   };
