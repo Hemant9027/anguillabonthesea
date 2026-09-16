@@ -20,18 +20,36 @@ type Section = {
   images: string[];
 };
 
-async function getLiveGallerySections(): Promise<Section[]> {
+async function getLiveGalleryData(): Promise<{ sections: Section[]; hero: string | null }> {
   try {
     const dbItems = await listGalleryItems({ status: 'active' });
     if (!dbItems || dbItems.length === 0) {
-      return [];
+      return { sections: [], hero: null };
     }
 
+    const seenUrls = new Set<string>();
+
+    // 1. Pick 1 standout exterior or entertainment deck image for the hero banner
+    const heroItem =
+      dbItems.find((i) => i.section === 'villa_exterior') ||
+      dbItems.find((i) => i.section === 'entertainment_deck') ||
+      dbItems[0];
+    const hero = heroItem?.url || null;
+    if (hero) {
+      seenUrls.add(hero);
+    }
+
+    // 2. Build sections with strictly unique images (no duplicate with hero or across sections)
     const sections: Section[] = GALLERY_SECTIONS.map((conf) => {
       const secImages = dbItems
         .filter((item) => item.section === conf.key)
         .sort((a, b) => a.order - b.order)
-        .map((item) => item.url);
+        .map((item) => item.url)
+        .filter((url) => {
+          if (!url || seenUrls.has(url)) return false;
+          seenUrls.add(url);
+          return true;
+        });
 
       return {
         key: conf.key,
@@ -40,25 +58,15 @@ async function getLiveGallerySections(): Promise<Section[]> {
       };
     }).filter((sec) => sec.images.length > 0);
 
-    return sections;
+    return { sections, hero };
   } catch (err) {
     console.warn('Failed to load gallery from DB:', err);
-    return [];
+    return { sections: [], hero: null };
   }
-}
-
-function getHeroImage(sections: Section[]): string | null {
-  for (const section of sections) {
-    if (section.images && section.images.length > 0) {
-      return section.images[0];
-    }
-  }
-  return null;
 }
 
 export default async function GalleryPage() {
-  const sections = await getLiveGallerySections();
-  const hero = getHeroImage(sections);
+  const { sections, hero } = await getLiveGalleryData();
 
   return (
     <>

@@ -21,24 +21,66 @@ export default async function AmenitiesPage() {
     console.warn('Could not load gallery items for amenities page:', err);
   }
 
-  const poolItem =
-    galleryItems.find((i) => i.section === 'entertainment_deck' || /pool/i.test(i.title || '')) ||
-    galleryItems.find((i) => i.section === 'amenities');
-  const cinemaItem =
-    galleryItems.find((i) => i.section === 'amenities' && /theater|cinema/i.test(i.title || '')) ||
-    galleryItems.find((i) => i.section === 'amenities');
-  const kitchenItem =
-    galleryItems.find((i) => i.section === 'main_level' && /kitchen|dining/i.test(i.title || '')) ||
-    galleryItems.find((i) => i.section === 'main_level');
-  const loungingItem =
-    galleryItems.find((i) => i.section === 'entertainment_deck' && i !== poolItem) ||
-    galleryItems.find((i) => i.section === 'attractions') ||
-    galleryItems[0];
+  // Strictly ensure each image shown on the amenities page is 100% unique (no duplicates)
+  const usedUrls = new Set<string>();
+
+  const pickUnique = (
+    predicate: (item: any) => boolean,
+    fallbackPredicate?: (item: any) => boolean
+  ) => {
+    let match = galleryItems.find((i) => !usedUrls.has(i.url) && predicate(i));
+    if (!match && fallbackPredicate) {
+      match = galleryItems.find((i) => !usedUrls.has(i.url) && fallbackPredicate(i));
+    }
+    if (!match) {
+      match = galleryItems.find((i) => !usedUrls.has(i.url));
+    }
+    if (match) {
+      usedUrls.add(match.url);
+    }
+    return match;
+  };
+
+  // 1. Featured Bento Grid (4 distinct images)
+  const poolItem = pickUnique(
+    (i) => i.section === 'entertainment_deck' && /pool/i.test(i.title || ''),
+    (i) => i.section === 'entertainment_deck' || i.section === 'amenities'
+  );
+  const cinemaItem = pickUnique(
+    (i) => i.section === 'amenities' && /theater|cinema/i.test(i.title || ''),
+    (i) => i.section === 'amenities'
+  );
+  const kitchenItem = pickUnique(
+    (i) => i.section === 'main_level' && /kitchen|dining/i.test(i.title || ''),
+    (i) => i.section === 'main_level'
+  );
+  const loungingItem = pickUnique(
+    (i) => i.section === 'entertainment_deck' || i.section === 'attractions',
+    (i) => i.section === 'main_level'
+  );
+
+  // 2. Categorized Breakdown Cards (3 distinct images, strictly non-overlapping)
+  const outdoorItem = pickUnique(
+    (i) => i.section === 'entertainment_deck' || i.section === 'attractions',
+    (i) => i.section === 'villa_exterior'
+  );
+  const techItem = pickUnique(
+    (i) => i.section === 'amenities',
+    (i) => i.section === 'main_level'
+  );
+  const culinaryItem = pickUnique(
+    (i) => i.section === 'main_level',
+    (i) => i.section === 'entertainment_deck'
+  );
 
   const poolSrc = poolItem?.url;
   const cinemaSrc = cinemaItem?.url;
   const kitchenSrc = kitchenItem?.url;
   const loungingSrc = loungingItem?.url;
+
+  const outdoorSrc = outdoorItem?.url;
+  const techSrc = techItem?.url;
+  const culinarySrc = culinaryItem?.url;
 
   return (
     <main className="min-h-screen bg-[#FBFBF9] text-[#0F172A] antialiased">
@@ -180,7 +222,14 @@ export default async function AmenitiesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="relative h-28 w-full overflow-hidden bg-slate-900">
-                {poolSrc && <Image src={poolSrc} alt="Pool" fill className="object-cover" />}
+                {outdoorSrc && (
+                  <Image
+                    src={outdoorSrc}
+                    alt={outdoorItem?.altText || "Outdoor & Pools"}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -221,7 +270,14 @@ export default async function AmenitiesPage() {
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="relative h-28 w-full overflow-hidden bg-slate-900">
-                {cinemaSrc && <Image src={cinemaSrc} alt="Cinema" fill className="object-cover" />}
+                {techSrc && (
+                  <Image
+                    src={techSrc}
+                    alt={techItem?.altText || "Entertainment & Tech"}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -260,7 +316,14 @@ export default async function AmenitiesPage() {
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="relative h-28 w-full overflow-hidden bg-slate-900">
-                {kitchenSrc && <Image src={kitchenSrc} alt="Kitchen" fill className="object-cover" />}
+                {culinarySrc && (
+                  <Image
+                    src={culinarySrc}
+                    alt={culinaryItem?.altText || "Culinary & Hospitality"}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">

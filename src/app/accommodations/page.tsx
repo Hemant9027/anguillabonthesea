@@ -17,7 +17,15 @@ export default async function AccommodationsPage() {
   try {
     const items = await listGalleryItems({ section: 'bedrooms', status: 'active' });
     if (items && items.length > 0) {
-      images = items.sort((a, b) => a.order - b.order).map((i) => i.url);
+      const seen = new Set<string>();
+      images = items
+        .sort((a, b) => a.order - b.order)
+        .map((i) => i.url)
+        .filter((url) => {
+          if (!url || seen.has(url)) return false;
+          seen.add(url);
+          return true;
+        });
     }
   } catch (err) {
     console.warn('Failed to load bedrooms from DB:', err);
