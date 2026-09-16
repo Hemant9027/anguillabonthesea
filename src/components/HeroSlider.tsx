@@ -3,22 +3,14 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
-const slides = [
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Luxury villa exterior with pool and ocean views',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Elegant villa bedroom overlooking the Caribbean',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Premium outdoor lounge pool area with beachfront view',
-  },
-];
+interface HeroSliderProps {
+  slides?: Array<{
+    src: string;
+    alt: string;
+  }>;
+}
 
-export default function HeroSlider() {
+export default function HeroSlider({ slides = [] }: HeroSliderProps) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {

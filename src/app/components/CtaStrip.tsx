@@ -5,8 +5,19 @@ import Link from 'next/link';
 import AppImage from '@/components/ui/AppImage';
 import Icon from '@/components/ui/AppIcon';
 
-export default function CtaStrip() {
+interface CtaStripProps {
+  image?: {
+    src: string;
+    alt?: string;
+  };
+}
+
+export default function CtaStrip({ image }: CtaStripProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const bgSrc = image?.src || '';
+  const bgAlt =
+    image?.alt ||
+    'Luxury villa terrace at sunset, warm golden light, ocean view beyond, deep amber shadows';
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -25,15 +36,17 @@ export default function CtaStrip() {
   return (
     <section ref={sectionRef} className="bg-background py-12 px-6 md:px-16 pb-20">
       <div className="max-w-screen-xl mx-auto">
-        <div className="relative rounded-4xl overflow-hidden reveal">
+        <div className="relative rounded-4xl overflow-hidden reveal bg-slate-900">
           {/* Background Image */}
-          <AppImage
-            src="https://img.rocket.new/generatedImages/rocket_gen_img_1930d8c90-1779290146266.png"
-            alt="Luxury villa terrace at sunset, warm golden light, dark wood furniture, ocean view beyond, deep amber shadows"
-            fill
-            className="object-cover"
-            sizes="100vw"
-          />
+          {bgSrc ? (
+            <AppImage
+              src={bgSrc}
+              alt={bgAlt}
+              fill
+              className="object-cover"
+              sizes="100vw"
+            />
+          ) : null}
 
           {/* Scrim */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-950/65" />

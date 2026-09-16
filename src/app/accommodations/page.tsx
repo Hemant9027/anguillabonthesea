@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 import AccommodationsGalleryClient from '../../components/AccommodationsGalleryClient';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -23,25 +20,7 @@ export default async function AccommodationsPage() {
       images = items.sort((a, b) => a.order - b.order).map((i) => i.url);
     }
   } catch (err) {
-    console.warn('Failed to load bedrooms from DB, falling back to disk:', err);
-  }
-
-  if (images.length === 0) {
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'aboutvillab', 'bedrooms');
-    try {
-      const files = fs
-        .readdirSync(uploadsDir)
-        .filter((file) => /\.(jpe?g|png|webp|gif)$/i.test(file))
-        .sort((a, b) =>
-          a.localeCompare(b, undefined, {
-            numeric: true,
-            sensitivity: 'base',
-          })
-        );
-      images = files.map((file) => `/uploads/aboutvillab/bedrooms/${encodeURIComponent(file)}`);
-    } catch (error) {
-      console.error('Unable to read bedroom images from disk:', error);
-    }
+    console.warn('Failed to load bedrooms from DB:', err);
   }
 
   return (

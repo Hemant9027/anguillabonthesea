@@ -160,11 +160,11 @@ export default function AvailabilityCalendar() {
                     calMonth === today.getMonth() &&
                     calYear === today.getFullYear();
 
-                  let statusClasses = "cal-day-available hover:bg-muted cursor-pointer";
+                  let statusClasses = "bg-white text-stone-900 hover:bg-stone-100/60 cursor-pointer";
                   if (isCheckIn) {
-                    statusClasses = "bg-primary/15 text-primary font-medium";
+                    statusClasses = "bg-stone-600 text-white font-semibold";
                   } else if (isCheckOut) {
-                    statusClasses = "bg-accent/15 text-accent font-medium";
+                    statusClasses = "bg-stone-600 text-white font-semibold";
                   } else if (isBooked || isBlocked) {
                     statusClasses = "cal-day-booked text-muted-foreground cursor-not-allowed";
                   }
@@ -178,7 +178,7 @@ export default function AvailabilityCalendar() {
                         ${isToday ? "ring-2 ring-inset ring-primary font-bold" : ""}
                       `}
                     >
-                      <span className={isToday ? "text-primary font-bold" : ""}>
+                      <span className={isToday && !isCheckIn && !isCheckOut ? "text-primary font-bold" : ""}>
                         {day}
                       </span>
                     </div>
@@ -196,12 +196,12 @@ export default function AvailabilityCalendar() {
             <div className="space-y-3">
               {[
                 {
-                  color: "bg-background border border-border",
+                  color: "bg-white border border-stone-300",
                   label: "Available",
                   desc: "Open for booking",
                 },
                 {
-                  color: "bg-primary/15",
+                  color: "bg-stone-600",
                   label: "Arrival Day",
                   desc: "Check-in date",
                 },
@@ -211,7 +211,7 @@ export default function AvailabilityCalendar() {
                   desc: "Occupied / not available",
                 },
                 {
-                  color: "bg-accent/15",
+                  color: "bg-stone-600",
                   label: "Departure Day",
                   desc: "Check-out date",
                 },

@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createSeasonalRule } from "@/lib/db/services/pricingService";
+import { createSeasonalRule, listSeasonalRules } from "@/lib/db/services/pricingService";
+
+export async function GET() {
+  try {
+    const seasons = await listSeasonalRules();
+    return NextResponse.json({
+      success: true,
+      seasons,
+      data: seasons,
+    });
+  } catch (error: any) {
+    console.error("Error fetching seasonal rules:", error);
+    return NextResponse.json(
+      { error: "Failed to load seasonal rules." },
+      { status: 500 }
+    );
+  }
+}
 
 function isValidDateString(d: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d).getTime());

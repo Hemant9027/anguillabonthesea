@@ -1,17 +1,23 @@
 import React from "react";
 import AppImage from "@/components/ui/AppImage";
 
-export default function RatesHero() {
+interface RatesHeroProps {
+  image?: string;
+}
+
+export default function RatesHero({ image }: RatesHeroProps) {
   return (
-    <section className="relative w-full h-[55vh] min-h-[380px] overflow-hidden">
-      <AppImage
-        src="https://img.rocket.new/generatedImages/rocket_gen_img_13ae9f615-1785414593638.png"
-        alt="Luxury villa pool at sunset with Caribbean sea view, warm amber glow, deep shadows, dramatic low-light atmosphere"
-        fill
-        priority
-        className="object-cover object-center"
-        sizes="100vw"
-      />
+    <section className="relative w-full h-[55vh] min-h-[380px] overflow-hidden bg-slate-900">
+      {image ? (
+        <AppImage
+          src={image}
+          alt="Villa rental rates"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+      ) : null}
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/25" />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-20">

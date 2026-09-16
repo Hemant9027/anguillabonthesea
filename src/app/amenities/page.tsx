@@ -1,11 +1,45 @@
-'use client';
-
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PillBar from './components/PillBar';
+import { listGalleryItems } from '@/lib/db/services/galleryService';
 
-export default function AmenitiesPage() {
+export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: 'Luxury Amenities | B on the Sea',
+  description:
+    'Curated amenities for an unforgettable Caribbean escape — pools, spa, home theater, gourmet kitchen, and concierge.',
+};
+
+export default async function AmenitiesPage() {
+  let galleryItems: any[] = [];
+  try {
+    galleryItems = await listGalleryItems({ status: 'active' });
+  } catch (err) {
+    console.warn('Could not load gallery items for amenities page:', err);
+  }
+
+  const poolItem =
+    galleryItems.find((i) => i.section === 'entertainment_deck' || /pool/i.test(i.title || '')) ||
+    galleryItems.find((i) => i.section === 'amenities');
+  const cinemaItem =
+    galleryItems.find((i) => i.section === 'amenities' && /theater|cinema/i.test(i.title || '')) ||
+    galleryItems.find((i) => i.section === 'amenities');
+  const kitchenItem =
+    galleryItems.find((i) => i.section === 'main_level' && /kitchen|dining/i.test(i.title || '')) ||
+    galleryItems.find((i) => i.section === 'main_level');
+  const loungingItem =
+    galleryItems.find((i) => i.section === 'entertainment_deck' && i !== poolItem) ||
+    galleryItems.find((i) => i.section === 'attractions') ||
+    galleryItems[0];
+
+  const poolSrc = poolItem?.url;
+  const cinemaSrc = cinemaItem?.url;
+  const kitchenSrc = kitchenItem?.url;
+  const loungingSrc = loungingItem?.url;
+
   return (
     <main className="min-h-screen bg-[#FBFBF9] text-[#0F172A] antialiased">
       <Header />
@@ -40,15 +74,17 @@ export default function AmenitiesPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch">
             <article
               id="aquatic"
-              className="lg:col-span-2 rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-white h-full"
+              className="lg:col-span-2 rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-slate-900 h-full"
             >
-              <Image
-                src="/images/pool.jpg"
-                alt="Pool at B On The Sea"
-                fill
-                className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
-                priority
-              />
+              {poolSrc && (
+                <Image
+                  src={poolSrc}
+                  alt={poolItem?.altText || "Pool at B On The Sea"}
+                  fill
+                  className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
+                  priority
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
               <div className="absolute bottom-6 left-6">
                 <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white max-w-[70%] shadow-md">
@@ -65,14 +101,16 @@ export default function AmenitiesPage() {
 
             <article
               id="cinema"
-              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-white h-full"
+              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-slate-900 h-full"
             >
-              <Image
-                src="/images/cinema.jpg"
-                alt="Home theater"
-                fill
-                className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
-              />
+              {cinemaSrc && (
+                <Image
+                  src={cinemaSrc}
+                  alt={cinemaItem?.altText || "Home theater"}
+                  fill
+                  className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               <div className="absolute bottom-4 left-4">
                 <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white shadow-sm">
@@ -86,14 +124,16 @@ export default function AmenitiesPage() {
 
             <article
               id="culinary"
-              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-white lg:col-span-1 h-full"
+              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-slate-900 lg:col-span-1 h-full"
             >
-              <Image
-                src="/images/kitchen.jpg"
-                alt="Kitchen and alfresco dining"
-                fill
-                className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
-              />
+              {kitchenSrc && (
+                <Image
+                  src={kitchenSrc}
+                  alt={kitchenItem?.altText || "Kitchen and alfresco dining"}
+                  fill
+                  className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               <div className="absolute bottom-4 left-4">
                 <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white shadow-sm">
@@ -109,14 +149,16 @@ export default function AmenitiesPage() {
 
             <article
               id="lounging"
-              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-white lg:col-span-3 h-full"
+              className="rounded-2xl overflow-hidden relative group shadow-lg border border-slate-100 bg-slate-900 lg:col-span-3 h-full"
             >
-              <Image
-                src="/images/beach.jpg"
-                alt="Ocean deck lounging"
-                fill
-                className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
-              />
+              {loungingSrc && (
+                <Image
+                  src={loungingSrc}
+                  alt={loungingItem?.altText || "Ocean deck lounging"}
+                  fill
+                  className="object-cover transform group-hover:scale-105 transition-transform duration-500 absolute inset-0"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
               <div className="absolute bottom-6 left-6">
                 <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white max-w-[60%] shadow-md">
@@ -137,8 +179,8 @@ export default function AmenitiesPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="relative h-28 w-full overflow-hidden">
-                <Image src="/images/pool.jpg" alt="Pool" fill className="object-cover" />
+              <div className="relative h-28 w-full overflow-hidden bg-slate-900">
+                {poolSrc && <Image src={poolSrc} alt="Pool" fill className="object-cover" />}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -178,8 +220,8 @@ export default function AmenitiesPage() {
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="relative h-28 w-full overflow-hidden">
-                <Image src="/images/cinema.jpg" alt="Cinema" fill className="object-cover" />
+              <div className="relative h-28 w-full overflow-hidden bg-slate-900">
+                {cinemaSrc && <Image src={cinemaSrc} alt="Cinema" fill className="object-cover" />}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -217,8 +259,8 @@ export default function AmenitiesPage() {
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="relative h-28 w-full overflow-hidden">
-                <Image src="/images/kitchen.jpg" alt="Kitchen" fill className="object-cover" />
+              <div className="relative h-28 w-full overflow-hidden bg-slate-900">
+                {kitchenSrc && <Image src={kitchenSrc} alt="Kitchen" fill className="object-cover" />}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -276,7 +318,7 @@ export default function AmenitiesPage() {
 
             <div className="flex items-center gap-3">
               <a
-                href="/inquire"
+                href="/book-now"
                 className="inline-block bg-white text-[#16202A] px-4 py-2 rounded-md font-semibold shadow hover:shadow-lg transition"
               >
                 Inquire Concierge
@@ -294,49 +336,5 @@ export default function AmenitiesPage() {
 
       <Footer />
     </main>
-  );
-}
-
-function PillBar() {
-  const pills = [
-    { id: 'aquatic', label: 'Pool • Spa' },
-    { id: 'cinema', label: 'Home Theater' },
-    { id: 'culinary', label: 'Kitchens & Grill' },
-    { id: 'lounging', label: 'Decks & Views' },
-    { id: 'outdoor', label: 'Outdoor Living' },
-    { id: 'entertainment', label: 'Entertainment' },
-    { id: 'hospitality', label: 'Concierge & Services' },
-  ];
-
-  const [active, setActive] = useState<string | null>(null);
-
-  const onClick = useCallback((id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setActive(id);
-      setTimeout(() => setActive(null), 1800);
-    }
-  }, []);
-
-  return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-3 items-center px-2 sm:px-0">
-        {pills.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => onClick(p.id)}
-            className={`flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-shadow border ${
-              active === p.id
-                ? 'bg-[#0369A1] text-white shadow-xl'
-                : 'bg-white text-[#0F172A] shadow-sm hover:shadow-md'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-[#0369A1]" />
-            <span>{p.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }

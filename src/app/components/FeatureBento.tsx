@@ -15,60 +15,69 @@ Row 3: [col-1-3: Amenities cs-3 rs-1]
 Placed 4/4 cards ✓
 */
 
-const features = [
-  {
-    id: 'beachfront',
-    title: 'Sandy Hill Beachfront',
-    desc: "Steps from the turquoise Caribbean Sea on one of Anguilla's most secluded beaches. Wake up to the sound of waves.",
-    src: '/images/beach.jpg',
-    alt: 'Pristine white sandy beach with turquoise water, bright sun, palm trees, Caribbean paradise',
-    stat: '33 Beaches',
-    statLabel: 'on the island',
-    colSpan: 'md:col-span-2',
-    rowSpan: 'md:row-span-2',
-    tall: true,
-  },
-  {
-    id: 'pools',
-    title: '2 Private Pools',
-    desc: 'Main-level infinity pool plus upper-deck spa wading pool with Caribbean views.',
-    src: '/images/pool.jpg',
-    alt: 'Luxury private pool with calm water and tropical surroundings',
-    stat: '2',
-    statLabel: 'private pools',
-    colSpan: 'md:col-span-1',
-    rowSpan: 'md:row-span-1',
-    tall: false,
-  },
-  {
-    id: 'theater',
-    title: 'Home Theater',
-    desc: '80" cinema screen, 7.1 Dolby surround sound, private screening room.',
-    src: '/images/cinema.jpg',
-    alt: 'Private home theater with screen and plush seating',
-    stat: '80"',
-    statLabel: 'cinema screen',
-    colSpan: 'md:col-span-1',
-    rowSpan: 'md:row-span-1',
-    tall: false,
-  },
-  {
-    id: 'amenities',
-    title: 'Full-Service Luxury',
-    desc: 'Gourmet kitchen, whole-house music, gas grill, wine fridge, concierge, and personalized services throughout your stay.',
-    src: 'https://img.rocket.new/generatedImages/rocket_gen_img_1f86a801c-1768463746444.png',
-    alt: 'Bright airy luxury kitchen with marble countertops, large windows, natural light, open plan, well-lit interior',
-    stat: '5.5',
-    statLabel: 'bathrooms',
-    colSpan: 'md:col-span-3',
-    rowSpan: 'md:row-span-1',
-    tall: false,
-    wide: true,
-  },
-];
+interface FeatureBentoProps {
+  images?: {
+    beachfront?: { src: string; alt?: string };
+    pools?: { src: string; alt?: string };
+    theater?: { src: string; alt?: string };
+    amenities?: { src: string; alt?: string };
+  };
+}
 
-export default function FeatureBento() {
+export default function FeatureBento({ images }: FeatureBentoProps) {
   const sectionRef = useRef<HTMLElement>(null);
+
+  const features = [
+    {
+      id: 'beachfront',
+      title: 'Sandy Hill Beachfront',
+      desc: "Steps from the turquoise Caribbean Sea on one of Anguilla's most secluded beaches. Wake up to the sound of waves.",
+      src: images?.beachfront?.src || '',
+      alt: images?.beachfront?.alt || 'Pristine white sandy beach with turquoise water, bright sun, palm trees, Caribbean paradise',
+      stat: '33 Beaches',
+      statLabel: 'on the island',
+      colSpan: 'md:col-span-2',
+      rowSpan: 'md:row-span-2',
+      tall: true,
+    },
+    {
+      id: 'pools',
+      title: '2 Private Pools',
+      desc: 'Main-level infinity pool plus upper-deck spa wading pool with Caribbean views.',
+      src: images?.pools?.src || '',
+      alt: images?.pools?.alt || 'Luxury private pool with calm water and tropical surroundings',
+      stat: '2',
+      statLabel: 'private pools',
+      colSpan: 'md:col-span-1',
+      rowSpan: 'md:row-span-1',
+      tall: false,
+    },
+    {
+      id: 'theater',
+      title: 'Home Theater',
+      desc: '80" cinema screen, 7.1 Dolby surround sound, private screening room.',
+      src: images?.theater?.src || '',
+      alt: images?.theater?.alt || 'Private home theater with screen and plush seating',
+      stat: '80"',
+      statLabel: 'cinema screen',
+      colSpan: 'md:col-span-1',
+      rowSpan: 'md:row-span-1',
+      tall: false,
+    },
+    {
+      id: 'amenities',
+      title: 'Full-Service Luxury',
+      desc: 'Gourmet kitchen, whole-house music, gas grill, wine fridge, concierge, and personalized services throughout your stay.',
+      src: images?.amenities?.src || '',
+      alt: images?.amenities?.alt || 'Bright airy luxury kitchen with marble countertops, large windows, natural light, open plan, well-lit interior',
+      stat: '5.5',
+      statLabel: 'bathrooms',
+      colSpan: 'md:col-span-3',
+      rowSpan: 'md:row-span-1',
+      tall: false,
+      wide: true,
+    },
+  ];
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -114,13 +123,17 @@ export default function FeatureBento() {
                 minHeight: f?.tall ? '480px' : f?.wide ? '200px' : '240px',
               }}
             >
-              <AppImage
-                src={f?.src}
-                alt={f?.alt}
-                fill
-                className={`object-cover transition-transform duration-700 group-hover:scale-105 ${f?.tall || f?.wide ? 'opacity-70' : 'opacity-60'} group-hover:opacity-80`}
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+              {f?.src ? (
+                <AppImage
+                  src={f.src}
+                  alt={f.alt}
+                  fill
+                  className={`object-cover transition-transform duration-700 group-hover:scale-105 ${f?.tall || f?.wide ? 'opacity-70' : 'opacity-60'} group-hover:opacity-80`}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-slate-900" />
+              )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 

@@ -1,7 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createAdditionalCharge } from "@/lib/db/services/pricingService";
+import { createAdditionalCharge, listAdditionalCharges } from "@/lib/db/services/pricingService";
 import { ChargeType } from "@/lib/types/pricing";
+
+export async function GET() {
+  try {
+    const charges = await listAdditionalCharges();
+    return NextResponse.json({
+      success: true,
+      charges,
+      data: charges,
+    });
+  } catch (error: any) {
+    console.error("Error fetching charges:", error);
+    return NextResponse.json(
+      { error: "Failed to load charges." },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
