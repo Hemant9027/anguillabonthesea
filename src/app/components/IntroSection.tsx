@@ -28,7 +28,14 @@ const highlights = [
   },
 ];
 
-export default function IntroSection() {
+interface IntroSectionProps {
+  image?: {
+    src: string;
+    alt: string;
+  };
+}
+
+export default function IntroSection({ image }: IntroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -67,7 +74,7 @@ export default function IntroSection() {
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
             Nestled on Sandy Hill Beach, Villa B on the Sea sits on the #1 Caribbean island as
-            ranked by Travel + Leisure's World's Best Awards — four years in a row.
+            ranked by Travel + Leisure&apos;s World&apos;s Best Awards — four years in a row.
           </p>
         </div>
 
@@ -77,16 +84,20 @@ export default function IntroSection() {
           <div className="lg:col-span-5 reveal-left">
             <div className="relative">
               {/* Main image - arch shape from Template 2 */}
-              <div className="relative h-[520px] rounded-t-arch rounded-b-2xl overflow-hidden shadow-2xl">
-                <AppImage
-                  src="/images/interior.jpg"
-                  alt="Luxurious villa interior with bright natural light and elegant furnishings"
-                  fill
-                  className="absolute inset-0 object-cover object-center hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 1024px) 100vw, 42vw"
-                />
+              <div className="relative h-[520px] rounded-t-arch rounded-b-2xl overflow-hidden shadow-2xl bg-muted flex items-center justify-center">
+                {image?.src ? (
+                  <AppImage
+                    src={image.src}
+                    alt={image.alt || 'Villa B on the Sea'}
+                    fill
+                    className="absolute inset-0 object-cover object-center hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 1024px) 100vw, 42vw"
+                  />
+                ) : (
+                  <span className="text-muted-foreground text-sm">Villa B on the Sea</span>
+                )}
 
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent pointer-events-none" />
               </div>
               {/* Floating stat card */}
               <div className="absolute -bottom-6 -right-6 glass-light card-shadow rounded-2xl p-5 hidden md:block">

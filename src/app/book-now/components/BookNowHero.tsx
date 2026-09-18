@@ -1,17 +1,23 @@
 import React from "react";
 import AppImage from "@/components/ui/AppImage";
 
-export default function BookNowHero() {
+interface BookNowHeroProps {
+  image?: string;
+}
+
+export default function BookNowHero({ image }: BookNowHeroProps) {
   return (
-    <section className="relative w-full h-[50vh] min-h-[340px] overflow-hidden">
-      <AppImage
-        src="https://images.unsplash.com/photo-1705338272367-777b0658a032"
-        alt="Luxury hotel pool at sunset with Caribbean sea view, warm golden light, deep amber shadows, atmospheric dusk lighting"
-        fill
-        priority
-        className="object-cover object-center"
-        sizes="100vw"
-      />
+    <section className="relative w-full h-[50vh] min-h-[340px] overflow-hidden bg-slate-900">
+      {image ? (
+        <AppImage
+          src={image}
+          alt="Reserve Your Stay at Villa B on the Sea"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+      ) : null}
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-20">

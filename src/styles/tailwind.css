@@ -379,6 +379,6 @@
 }
 
 .cal-day-available {
-    background-color: rgba(27, 58, 92, 0.06);
-    color: var(--primary);
+    background-color: #ffffff;
+    color: var(--foreground);
 }

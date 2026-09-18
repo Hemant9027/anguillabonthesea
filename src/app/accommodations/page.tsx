@@ -1,9 +1,9 @@
-import fs from 'fs';
-import path from 'path';
-
 import AccommodationsGalleryClient from '../../components/AccommodationsGalleryClient';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { listGalleryItems } from '@/lib/db/services/galleryService';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Villa Bedrooms | B on the Sea',
@@ -11,31 +11,30 @@ export const metadata = {
     'Explore the private bedrooms at B on the Sea, designed for comfort, privacy, and relaxing Caribbean views.',
 };
 
-export default function AccommodationsPage() {
-  const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'aboutvillab', 'bedrooms');
-
-  let files: string[] = [];
+export default async function AccommodationsPage() {
+  let images: string[] = [];
 
   try {
-    files = fs
-      .readdirSync(uploadsDir)
-      .filter((file) => /\.(jpe?g|png|webp|gif)$/i.test(file))
-      .sort((a, b) =>
-        a.localeCompare(b, undefined, {
-          numeric: true,
-          sensitivity: 'base',
-        })
-      );
-  } catch (error) {
-    console.error('Unable to read bedroom images:', error);
-    files = [];
+    const items = await listGalleryItems({ section: 'bedrooms', status: 'active' });
+    if (items && items.length > 0) {
+      const seen = new Set<string>();
+      images = items
+        .sort((a, b) => a.order - b.order)
+        .map((i) => i.url)
+        .filter((url) => {
+          if (!url || seen.has(url)) return false;
+          seen.add(url);
+          return true;
+        });
+    }
+  } catch (err) {
+    console.warn('Failed to load bedrooms from DB:', err);
   }
-
-  const images = files.map((file) => `/uploads/aboutvillab/bedrooms/${encodeURIComponent(file)}`);
 
   return (
     <>
       <Header />
+
 
       <main className="mx-auto max-w-7xl px-5 py-12 sm:px-6 sm:py-16 lg:py-20">
         {/* Page Header */}

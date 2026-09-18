@@ -1,24 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
-const slides = [
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Luxury villa exterior with pool and ocean views',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Elegant villa bedroom overlooking the Caribbean',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
-    alt: 'Premium outdoor lounge pool area with beachfront view',
-  },
-];
+interface HeroSliderProps {
+  slides?: Array<{
+    src: string;
+    alt: string;
+  }>;
+}
 
-export default function HeroSlider() {
+export default function HeroSlider({ slides = [] }: HeroSliderProps) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -79,7 +71,7 @@ export default function HeroSlider() {
           className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition hover:border-amber-300 hover:text-amber-300"
           aria-label="Previous slide"
         >
-          <ChevronLeft size={22} />
+          <ChevronLeftIcon className="w-5 h-5" />
         </button>
         <button
           type="button"
@@ -87,7 +79,7 @@ export default function HeroSlider() {
           className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition hover:border-amber-300 hover:text-amber-300"
           aria-label="Next slide"
         >
-          <ChevronRight size={22} />
+          <ChevronRightIcon className="w-5 h-5" />
         </button>
       </div>
     </section>

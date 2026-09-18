@@ -5,34 +5,30 @@ import Link from 'next/link';
 import AppImage from '@/components/ui/AppImage';
 import Icon from '@/components/ui/AppIcon';
 
-const slides = [
-  {
-    src: '/images/home/1.jpg',
-    alt: 'Turquoise Caribbean beachfront at golden hour, calm shallow water, white sand shoreline, bright blue sky',
-  },
-  {
-    src: '/images/home/2.jpg',
-    alt: 'Luxury beachfront villa pool at dusk, infinity edge, dark water, atmospheric low-light ambiance',
-  },
-  {
-    src: '/images/home/3.jpg',
-    alt: 'Elegant villa living room interior, neutral tones, large windows, Caribbean garden view beyond, dim natural light',
-  },
-  {
-    src: '/images/home/4.jpg',
-    alt: 'High-end villa exterior with lush tropical landscape and dramatic skies',
-  },
-];
+export interface HeroSlide {
+  src: string;
+  alt: string;
+}
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  slides?: HeroSlide[];
+}
+
+export default function HeroSection({ slides = [] }: HeroSectionProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [flexible, setFlexible] = useState(false);
 
   const nextSlide = useCallback(() => {
-    setActiveSlide((prev) => (prev + 1) % slides?.length);
-  }, []);
+    if (slides.length > 0) {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }
+  }, [slides.length]);
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [slides]);
 
   useEffect(() => {
     const timer = setInterval(nextSlide, 5500);

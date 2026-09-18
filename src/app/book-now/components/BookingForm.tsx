@@ -1,18 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 export default function BookingForm() {
   const [form, setForm] = useState({
     name: '',
     email: '',
+    phone: '',
     checkIn: '',
     checkOut: '',
     guests: '2',
     message: '',
   });
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [contactInfo, setContactInfo] = useState({
+    phone: '+1 508-633-7355',
+    email: 'anguillabonthesea@gmail.com',
+  });
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          setContactInfo({
+            phone: data.settings.contactPhone || '+1 508-633-7355',
+            email: data.settings.contactEmail || 'anguillabonthesea@gmail.com',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -20,10 +41,46 @@ export default function BookingForm() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setErrorMsg(null);
+
+    if (form.checkIn && form.checkOut && form.checkOut <= form.checkIn) {
+      setErrorMsg("Check-out date must be strictly after check-in date.");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone || undefined,
+          checkIn: form.checkIn || undefined,
+          checkOut: form.checkOut || undefined,
+          guests: Number(form.guests) || 2,
+          subject: `Villa Stay Inquiry: ${form.name} (${form.checkIn || 'Dates TBD'})`,
+          message: form.message || `Quote request for ${form.guests} guests from ${form.checkIn} to ${form.checkOut}.`,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to submit inquiry. Please try again.');
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
 
   return (
     <section className="bg-background py-16 px-6 md:px-16 pb-24">
@@ -45,8 +102,8 @@ export default function BookingForm() {
                 </p>
                 <p className="text-sm text-muted-foreground mt-4">
                   Questions? Call us at{' '}
-                  <a href="tel:+15086337355" className="text-primary font-semibold">
-                    +1 508-633-7355
+                  <a href={`tel:${contactInfo.phone.replace(/[^+\d]/g, '')}`} className="text-primary font-semibold">
+                    {contactInfo.phone}
                   </a>
                 </p>
               </div>
@@ -61,6 +118,12 @@ export default function BookingForm() {
                 <p className="text-stone-600 text-sm mb-8">
                   Fill in your details and we&apos;ll get back to you within 24 hours.
                 </p>
+
+                {errorMsg && (
+                  <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm">
+                    {errorMsg}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Name */}
@@ -80,7 +143,7 @@ export default function BookingForm() {
                   </div>
 
                   {/* Email */}
-                  <div className="sm:col-span-2">
+                  <div>
                     <label className="text-xs font-semibold uppercase tracking-widest text-stone-700 block mb-2">
                       Email Address *
                     </label>
@@ -91,6 +154,21 @@ export default function BookingForm() {
                       onChange={handleChange}
                       required
                       placeholder="your@email.com"
+                      className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-white transition-colors bg-white"
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-widest text-stone-700 block mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="+1 (555) 000-0000"
                       className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-white transition-colors bg-white"
                     />
                   </div>
@@ -106,6 +184,7 @@ export default function BookingForm() {
                       value={form.checkIn}
                       onChange={handleChange}
                       required
+                      min={new Date().toISOString().split("T")[0]}
                       className="w-full border border-input rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary transition-colors bg-background"
                     />
                   </div>
@@ -121,12 +200,13 @@ export default function BookingForm() {
                       value={form.checkOut}
                       onChange={handleChange}
                       required
+                      min={form.checkIn || new Date().toISOString().split("T")[0]}
                       className="w-full border border-input rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary transition-colors bg-background"
                     />
                   </div>
 
                   {/* Guests */}
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground block mb-2">
                       Number of Guests
                     </label>
@@ -162,9 +242,10 @@ export default function BookingForm() {
 
                 <button
                   type="submit"
-                  className="btn-accent w-full mt-6 flex items-center justify-center gap-2 text-base"
+                  disabled={submitting}
+                  className="btn-accent w-full mt-6 flex items-center justify-center gap-2 text-base disabled:opacity-60"
                 >
-                  Get Quote
+                  {submitting ? 'Sending Request...' : 'Get Quote'}
                   <Icon name="ArrowRightIcon" size={18} />
                 </button>
 
@@ -182,7 +263,7 @@ export default function BookingForm() {
               <h3 className="font-display text-xl font-medium mb-5">Contact Us Directly</h3>
               <div className="space-y-4">
                 <a
-                  href="tel:+15086337355"
+                  href={`tel:${contactInfo.phone.replace(/[^+\d]/g, '')}`}
                   className="flex items-center gap-4 text-white/80 hover:text-white transition-colors"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -190,11 +271,11 @@ export default function BookingForm() {
                   </div>
                   <div>
                     <p className="text-xs text-white/50 uppercase tracking-widest">Phone</p>
-                    <p className="font-semibold text-sm">+1 508-633-7355</p>
+                    <p className="font-semibold text-sm">{contactInfo.phone}</p>
                   </div>
                 </a>
                 <a
-                  href="mailto:anguillabonthesea@gmail.com"
+                  href={`mailto:${contactInfo.email}`}
                   className="flex items-center gap-4 text-white/80 hover:text-white transition-colors"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -202,9 +283,10 @@ export default function BookingForm() {
                   </div>
                   <div>
                     <p className="text-xs text-white/50 uppercase tracking-widest">Email</p>
-                    <p className="font-semibold text-sm">anguillabonthesea@gmail.com</p>
+                    <p className="font-semibold text-sm">{contactInfo.email}</p>
                   </div>
                 </a>
+
                 <div className="flex items-center gap-4 text-white/80">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
                     <Icon name="UserIcon" size={18} className="text-white" />

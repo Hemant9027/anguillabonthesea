@@ -35,7 +35,7 @@ const AppImage = memo(function AppImage({
   fill = false,
   sizes,
   onClick,
-  fallbackSrc = '/assets/images/no_image.png',
+  fallbackSrc = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="%2394a3b8">Villa B on the Sea</text></svg>',
   loading = 'lazy',
   unoptimized = false,
   ...props

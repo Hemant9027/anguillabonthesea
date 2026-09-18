@@ -2,6 +2,7 @@
 
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Lightbox from './Lightbox';
 
 type Section = {
@@ -466,7 +467,7 @@ export default function GalleryClient({ sections, hero }: GalleryClientProps) {
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <a
+              <Link
                 href="/book-now"
                 className="
                   inline-flex items-center justify-center
@@ -477,9 +478,9 @@ export default function GalleryClient({ sections, hero }: GalleryClientProps) {
                 "
               >
                 Book Your Stay
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/"
                 className="
                   inline-flex items-center justify-center
@@ -489,8 +490,8 @@ export default function GalleryClient({ sections, hero }: GalleryClientProps) {
                   hover:border-white/50
                 "
               >
-                Explore the Villa
-              </a>
+                Return Home
+              </Link>
             </div>
           </div>
         </section>
