@@ -160,28 +160,8 @@ function SectionGallery({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-12 md:gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
         {section.images.map((src, index) => {
-          const pattern = index % 8;
-
-          let className = 'col-span-2 aspect-[4/3] md:col-span-4 md:aspect-auto md:h-[280px]';
-
-          if (pattern === 0) {
-            className = 'col-span-2 aspect-[16/10] md:col-span-8 md:row-span-2 md:h-[575px]';
-          } else if (pattern === 1) {
-            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
-          } else if (pattern === 2) {
-            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
-          } else if (pattern === 3) {
-            className = 'col-span-2 aspect-[16/10] md:col-span-4 md:h-[575px]';
-          } else if (pattern === 4 || pattern === 5) {
-            className = 'col-span-1 aspect-square md:col-span-4 md:h-[280px]';
-          } else if (pattern === 6) {
-            className = 'col-span-2 aspect-[16/9] md:col-span-8 md:h-[400px]';
-          } else if (pattern === 7) {
-            className = 'col-span-2 aspect-[4/3] md:col-span-4 md:h-[400px]';
-          }
-
           return (
             <GalleryImage
               key={`${section.key}-${src}-${index}`}
@@ -189,7 +169,7 @@ function SectionGallery({
               index={index}
               section={section.label}
               alt={`${section.label} — image ${index + 1}`}
-              className={className}
+              className="aspect-[4/3]"
               onClick={() => onOpen(section.images, index)}
             />
           );
@@ -327,21 +307,19 @@ export default function GalleryClient({ sections, hero }: GalleryClientProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
 
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-6 pb-12 md:pb-16">
-          <div className="max-w-3xl text-white">
+          <div className="max-w-none text-white">
             <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.35em] text-white/70">
               B on the Sea · Villa Gallery
             </p>
 
-            <h1 className="font-display text-5xl leading-[0.95] tracking-tight md:text-7xl lg:text-8xl">
-              A place worth
-              <br />
-              seeing.
+            <h1 className="whitespace-nowrap font-display text-3xl leading-none tracking-tight sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl">
+              A place worth seeing.
             </h1>
 
             <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center">
               <p className="max-w-lg text-sm leading-6 text-white/75 md:text-base">
                 Explore {totalImages} images of the villa, its private spaces, expansive decks, and
-                breathtaking Caribbean surroundings.
+                breathtaking Caribbean surroundings. Spaces designed for effortless island living.
               </p>
 
               <button
@@ -425,18 +403,6 @@ export default function GalleryClient({ sections, hero }: GalleryClientProps) {
 
       {/* GALLERY */}
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24">
-        <div className="mb-20 max-w-2xl">
-          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-slate-400">
-            Inside B on the Sea
-          </p>
-
-          <h2 className="mt-4 font-display text-4xl leading-tight tracking-tight md:text-5xl">
-            Spaces designed for
-            <br />
-            effortless island living.
-          </h2>
-        </div>
-
         <div className="space-y-24 md:space-y-32">
           {sections.map((section, index) => (
             <SectionGallery

@@ -43,18 +43,18 @@ export default function Header() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled
-            ? 'bg-white/95 border-b border-stone-200 shadow-xl py-3'
-            : 'bg-stone-950/85 backdrop-blur-xl shadow-sm py-4'
+            ? 'bg-white border-b border-stone-200 shadow-xl py-3'
+            : 'bg-stone-950/5 backdrop-blur-[5px] shadow-sm py-4'
         }`}
       >
         <div className="max-w-screen-xl mx-auto px-6 flex items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
-            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-white/10 shadow-sm backdrop-blur-md">
+            <div className="flex h-12 w-[76px] items-center justify-center rounded-3xl bg-white/10 shadow-sm backdrop-blur-md">
               <img
                 src="/logo.png"
                 alt="Villa B on the Sea"
-                className="h-17 w-auto object-contain"
+                className="h-auto max-h-[59px] w-full object-contain"
               />
             </div>
           </Link>

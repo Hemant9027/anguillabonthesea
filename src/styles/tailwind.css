@@ -1,7 +1,4 @@
-@reference "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
     --background: #FDFBF7;
@@ -59,6 +56,57 @@
     .text-hero-xl {
         font-size: clamp(2.5rem, 7vw, 5.5rem);
         line-height: 1.0;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+    }
+
+    .hero-booking {
+        top: 50%;
+    }
+
+    .hero-description {
+        top: calc(50% + 9rem);
+        font-size: 1.25rem;
+    }
+
+    @media (min-width: 40rem) {
+        .hero-description {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (min-width: 64rem) {
+        .hero-description {
+            top: calc(50% + 6rem);
+        }
+    }
+
+    @media (max-width: 39.999rem) {
+        .hero-booking {
+            top: 51.5%;
+        }
+    }
+
+    @media (min-width: 48rem) and (max-height: 700px) {
+        .hero-eyebrow,
+        .hero-title-break {
+            display: none;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-booking {
+            top: 52.5%;
+        }
+
+        .hero-description {
+            top: calc(52.5% + 8.5rem);
+            font-size: 1.125rem;
+        }
     }
 
     .text-section-title {
