@@ -51,7 +51,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
             <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-white/10 shadow-sm backdrop-blur-md">
-              <img src="/logo.png" alt="Villa B on the Sea" className="h-8 w-auto object-contain" />
+              <img
+                src="/logo.png"
+                alt="Villa B on the Sea"
+                className="h-17 w-auto object-contain"
+              />
             </div>
           </Link>
 
